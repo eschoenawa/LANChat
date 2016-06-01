@@ -31,6 +31,7 @@ public class Server implements Runnable {
 				serverSocket.receive(packet);
 				InetAddress ip = packet.getAddress();
 				String received = new String(packet.getData(), 0, packet.getLength());
+				System.out.println("Received: " + received + " from " + ip.toString());
 				if (received.toLowerCase().startsWith(Config.load().getCommandPrefix()) && response) {
 					String value = received.split(":")[1];
 					parent.addValue(value);
@@ -41,7 +42,12 @@ public class Server implements Runnable {
 				} else if (received.toLowerCase().startsWith(Config.load().getResponsePrefix()) && response) {
 					String value = received.split(":")[1];
 					parent.addValue(value);
-				} else {
+				} 
+				else if (received.toLowerCase().startsWith(Config.load().getUpdatePrefix()) && response) {
+					parent.discover();
+				}
+				
+				else {
 					parent.receive(received);
 				}
 			}
@@ -94,6 +100,7 @@ public class Server implements Runnable {
 		DatagramPacket packet = new DatagramPacket(s.getBytes(), s.getBytes().length, ip, port);
 		try {
 			serverSocket.send(packet);
+			System.out.println("Sent: " + s + " to " + ip.toString());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
