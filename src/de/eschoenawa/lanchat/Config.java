@@ -21,6 +21,10 @@ public class Config {
 	private String commandPrefix;
 	private String responsePrefix;
 
+	public Config() {
+		
+	}
+	
 	public Config(String name, String commandPrefix, String responsePrefix) {
 		super();
 		this.commandPrefix = commandPrefix;

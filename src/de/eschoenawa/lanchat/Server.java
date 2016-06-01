@@ -26,8 +26,8 @@ public class Server implements Runnable {
 		try {
 			serverSocket = new DatagramSocket(55545);
 			byte[] receiveData = new byte[1400];
-			DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
 			while (response) {
+				DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
 				serverSocket.receive(packet);
 				InetAddress ip = packet.getAddress();
 				String received = new String(packet.getData(), 0, packet.getLength());
