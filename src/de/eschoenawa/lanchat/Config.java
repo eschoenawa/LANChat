@@ -14,18 +14,20 @@ public class Config {
 
 	public static String CONFIG_PATH = "./config.json";
 	public static String DEFAULT_NAME = "Anonymous";
+	public static String DEFAULT_COMMAND_PREFIX = "cmd:";
+	public static String DEFAULT_RESPONSE_PREFIX = "hello:";
 	
 	private String name;
+	private String commandPrefix;
+	private String responsePrefix;
 
-	public Config(String name) {
+	public Config(String name, String commandPrefix, String responsePrefix) {
 		super();
+		this.commandPrefix = commandPrefix;
 		this.name = name;
+		this.responsePrefix = responsePrefix;
 	}
-
-	public Config() {
-		
-	}
-
+	
 	public String getName() {
 		return name;
 	}
@@ -34,6 +36,22 @@ public class Config {
 		this.name = name;
 	}
 	
+	public String getCommandPrefix() {
+		return commandPrefix;
+	}
+
+	public void setCommandPrefix(String commandPrefix) {
+		this.commandPrefix = commandPrefix;
+	}
+
+	public String getResponsePrefix() {
+		return responsePrefix;
+	}
+
+	public void setResponsePrefix(String responsePrefix) {
+		this.responsePrefix = responsePrefix;
+	}
+
 	public void export() throws FileNotFoundException, UnsupportedEncodingException {
 		Gson gson = new Gson();
 		PrintWriter writer = new PrintWriter(CONFIG_PATH);
@@ -46,7 +64,7 @@ public class Config {
 		File f = new File(CONFIG_PATH);
 		if (!f.exists()) {
 			PrintWriter writer = new PrintWriter(CONFIG_PATH);
-			Config defaultConfig = new Config(DEFAULT_NAME);
+			Config defaultConfig = new Config(DEFAULT_NAME, DEFAULT_COMMAND_PREFIX, DEFAULT_RESPONSE_PREFIX);
 			writer.print(gson.toJson(defaultConfig));
 			writer.close();
 		}
