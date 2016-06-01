@@ -100,6 +100,11 @@ public class GUI extends JFrame {
 		this.contentPane.add(this.btnSend);
 		
 		this.textField = new JTextField();
+		this.textField.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				sendText();
+			}
+		});
 		this.textField.setBounds(10, 233, 183, 20);
 		this.contentPane.add(this.textField);
 		this.textField.setColumns(10);
@@ -168,6 +173,7 @@ public class GUI extends JFrame {
 				e.printStackTrace();
 			}
 			this.textField.setText("");
+			this.textField.requestFocusInWindow();
 		}
 	}
 }

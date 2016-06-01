@@ -35,10 +35,7 @@ public class Server implements Runnable {
 				if (received.toLowerCase().startsWith(Config.load().getCommandPrefix()) && response) {
 					String value = received.split(":")[1];
 					parent.addValue(value);
-					int port = packet.getPort();
-					byte[] data = (Config.load().getResponsePrefix() + Config.load().getName()).getBytes();
-					packet = new DatagramPacket(data, data.length, ip, port);
-					serverSocket.send(packet);
+					send(ip, Config.load().getResponsePrefix() + Config.load().getName());
 				} else if (received.toLowerCase().startsWith(Config.load().getResponsePrefix()) && response) {
 					String value = received.split(":")[1];
 					parent.addValue(value);
