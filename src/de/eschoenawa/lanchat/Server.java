@@ -40,8 +40,9 @@ public class Server implements Runnable {
 					String value = received.split(":")[1];
 					parent.addValue(value);
 				} 
-				else if (received.toLowerCase().startsWith(Config.load().getUpdatePrefix()) && response) {
-					parent.discover();
+				else if (received.toLowerCase().startsWith(Config.load().getUpdatePrefix())) {
+					if (response)
+						parent.discover();
 				}
 				
 				else {
