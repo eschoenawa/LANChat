@@ -211,7 +211,7 @@ public class GUI extends JFrame {
 						try (FileWriter fw = new FileWriter(f, true);
 								BufferedWriter bw = new BufferedWriter(fw);
 								PrintWriter out = new PrintWriter(bw)) {
-							out.println("javaw -Xmx200m -jar " + decodedPath);
+							out.println("START javaw -Xmx200m -jar " + decodedPath);
 							forceNotification("LANChat", "Registered autostart.");
 						} catch (Exception e1) {
 							e1.printStackTrace();
