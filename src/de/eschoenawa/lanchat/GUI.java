@@ -15,14 +15,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowStateListener;
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -192,6 +187,7 @@ public class GUI extends JFrame {
 				}
 			});
 			popup.add(defaultItem);
+			/*
 			defaultItem = new MenuItem("(Un)Register at startup");
 			defaultItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
@@ -211,7 +207,7 @@ public class GUI extends JFrame {
 						try (FileWriter fw = new FileWriter(f, true);
 								BufferedWriter bw = new BufferedWriter(fw);
 								PrintWriter out = new PrintWriter(bw)) {
-							out.println("START javaw -Xmx200m -jar " + decodedPath);
+							out.println("javaw -Xmx200m -jar " + decodedPath);
 							forceNotification("LANChat", "Registered autostart.");
 						} catch (Exception e1) {
 							e1.printStackTrace();
@@ -223,6 +219,7 @@ public class GUI extends JFrame {
 				}
 			});
 			popup.add(defaultItem);
+			*/
 			defaultItem = new MenuItem("Exit");
 			defaultItem.addActionListener(exitListener);
 			popup.add(defaultItem);
