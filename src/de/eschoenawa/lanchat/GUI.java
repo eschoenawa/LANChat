@@ -198,7 +198,11 @@ public class GUI extends JFrame {
 					File f = new File(getautostart() + "\\LANChat.bat");
 					if (!f.exists()) {
 						String path = GUI.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+						if (path.startsWith("/")) {
+							path = path.substring(1);
+						}
 						String decodedPath = "";
+						System.out.println(path);
 						try {
 							decodedPath = URLDecoder.decode(path, "UTF-8");
 						} catch (UnsupportedEncodingException e2) {
