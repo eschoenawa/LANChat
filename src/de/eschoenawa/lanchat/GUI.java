@@ -17,6 +17,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowStateListener;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -26,13 +27,12 @@ import java.net.URLDecoder;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 
 public class GUI extends JFrame {
 
@@ -82,6 +82,7 @@ public class GUI extends JFrame {
 			public void windowClosing(WindowEvent arg0) {
 				System.out.println("Sending goodbye...");
 				server.stopResponse();
+				tray.remove(trayIcon);
 				try {
 					server.sendToBroadcast(Config.load().getUpdatePrefix());
 				} catch (IOException e) {
@@ -112,23 +113,6 @@ public class GUI extends JFrame {
 		this.textArea.setBounds(10, 36, 282, 186);
 		textArea.setWrapStyleWord(true);
 		this.textArea.setLineWrap(true);
-
-		textArea.getDocument().addDocumentListener(new DocumentListener() {
-
-			@Override
-			public void removeUpdate(DocumentEvent e) {
-				// TODO
-			}
-
-			@Override
-			public void insertUpdate(DocumentEvent e) {
-				// TODO Notification
-			}
-
-			@Override
-			public void changedUpdate(DocumentEvent arg0) {
-			}
-		});
 		this.contentPane.add(this.textArea);
 
 		this.btnSend = new JButton("Send");
@@ -197,6 +181,13 @@ public class GUI extends JFrame {
 				public void actionPerformed(ActionEvent e) {
 					setVisible(true);
 					setExtendedState(JFrame.NORMAL);
+				}
+			});
+			popup.add(defaultItem);
+			defaultItem = new MenuItem("Set nickname...");
+			defaultItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					setNick();
 				}
 			});
 			popup.add(defaultItem);
@@ -343,6 +334,7 @@ public class GUI extends JFrame {
 			trayIcon.displayMessage(title, message, TrayIcon.MessageType.INFO);
 		}
 	}
+
 	public void forceNotification(String title, String message) {
 		trayIcon.displayMessage(title, message, TrayIcon.MessageType.INFO);
 	}
@@ -350,5 +342,23 @@ public class GUI extends JFrame {
 	public static String getautostart() {
 		return System.getProperty("java.io.tmpdir").replace("Local\\Temp\\",
 				"Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup");
+	}
+
+	public void setNick() {
+		String newNick = JOptionPane.showInputDialog(this, "Please enter your new Nickname", "Enter nickname",
+				JOptionPane.QUESTION_MESSAGE);
+		if (newNick != null) {
+			try {
+				Config c = new Config(newNick, Config.load().getCommandPrefix(), Config.load().getResponsePrefix(),
+						Config.load().getUpdatePrefix());
+				c.export();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }

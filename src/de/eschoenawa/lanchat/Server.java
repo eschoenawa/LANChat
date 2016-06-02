@@ -6,7 +6,6 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.util.Enumeration;
 
 public class Server implements Runnable {
@@ -50,10 +49,9 @@ public class Server implements Runnable {
 				}
 			}
 			serverSocket.close();
-		} catch (SocketException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+			System.exit(1);
 		}
 	}
 
