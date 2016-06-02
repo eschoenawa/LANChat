@@ -167,6 +167,7 @@ public class GUI extends JFrame {
 				public void actionPerformed(ActionEvent e) {
 					System.out.println("Exiting....");
 					server.stopResponse();
+					tray.remove(trayIcon);
 					try {
 						server.sendToBroadcast(Config.load().getUpdatePrefix());
 					} catch (IOException io) {
@@ -359,6 +360,7 @@ public class GUI extends JFrame {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			discover();
 		}
 	}
 }
