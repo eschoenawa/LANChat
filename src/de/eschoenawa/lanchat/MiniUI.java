@@ -54,7 +54,7 @@ import de.eschoenawa.lanchat.updater.Updater;
 public class MiniUI extends JFrame implements UI {
 
 	private static final long serialVersionUID = 1L;
-	public static String version = "1.01";
+	public static String version = "1.04";
 	private JPanel contentPane;
 	private TrayIcon trayIcon;
 	private SystemTray tray;
@@ -185,8 +185,8 @@ public class MiniUI extends JFrame implements UI {
 		this.panelChat.add(this.scrollPane);
 
 		this.textPane = new JTextPane();
-		this.textPane.setFont(new Font("Tahoma", Font.BOLD, 14));
 		this.textPane.setEditable(false);
+		this.textPane.setFont(new Font("Tahoma", Font.BOLD, 14));
 		this.textPane.setBackground(Color.GRAY);
 		DefaultCaret caret = (DefaultCaret) textPane.getCaret();
 		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
@@ -254,7 +254,8 @@ public class MiniUI extends JFrame implements UI {
 				public void actionPerformed(ActionEvent e) {
 					System.out.println("Exiting....");
 					server.stopResponse();
-					tray.remove(trayIcon);
+					if (SystemTray.isSupported())
+						tray.remove(trayIcon);
 					try {
 						server.sendToBroadcast(Config.load().getUpdatePrefix());
 					} catch (IOException io) {
@@ -318,11 +319,21 @@ public class MiniUI extends JFrame implements UI {
 					reloadHistory();
 				}
 			});
+			popup.add(defaultItem);
 			defaultItem = new MenuItem("Update");
 			defaultItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					Updater frame = new Updater();
 					if (frame.updateUpdater()) {
+						System.out.println("Exiting....");
+						server.stopResponse();
+						if (SystemTray.isSupported())
+							tray.remove(trayIcon);
+						try {
+							server.sendToBroadcast(Config.load().getUpdatePrefix());
+						} catch (IOException io) {
+							io.printStackTrace();
+						}
 						try {
 							Runtime.getRuntime().exec("java -jar " + Updater.updater + " relaunch");
 							System.exit(0);
@@ -496,6 +507,7 @@ public class MiniUI extends JFrame implements UI {
 					ex.printStackTrace();
 				}
 			}
+			textPane.setCaretPosition(doc.getLength());
 		}
 	}
 
