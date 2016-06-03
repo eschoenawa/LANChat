@@ -10,11 +10,11 @@ import java.util.Enumeration;
 
 public class Server implements Runnable {
 
-	private GUI parent;
+	private UI parent;
 	private boolean response;
 	private DatagramSocket serverSocket;
 
-	public Server(GUI parent) {
+	public Server(UI parent) {
 		super();
 		this.parent = parent;
 		this.response = true;

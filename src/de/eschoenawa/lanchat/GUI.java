@@ -29,7 +29,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
-public class GUI extends JFrame {
+public class GUI extends JFrame implements UI {
 
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;

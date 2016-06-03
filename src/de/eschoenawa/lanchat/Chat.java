@@ -22,7 +22,7 @@ public class Chat {
 		}
 	}
 
-	public static void load(GUI ui) {
+	public static void load(UI ui) {
 		if (f.exists()) {
 			try (BufferedReader br = new BufferedReader(new FileReader(f))) {
 				String line;
