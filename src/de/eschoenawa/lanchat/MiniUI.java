@@ -39,6 +39,7 @@ import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultCaret;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
@@ -88,21 +89,20 @@ public class MiniUI extends JFrame implements UI {
 	 * Create the frame.
 	 */
 	public MiniUI() {
-		UIManager.put("TabbedPane.contentAreaColor ",ColorUIResource.BLACK);
-	       UIManager.put("TabbedPane.selected",ColorUIResource.GRAY);
-	       UIManager.put("TabbedPane.background",ColorUIResource.BLACK);
-	       UIManager.put("TabbedPane.shadow",ColorUIResource.DARK_GRAY);
-	       UIManager.put("TabbedPane.darkShadow", ColorUIResource.BLACK);
-	       UIManager.put("TabbedPane.light", ColorUIResource.GRAY);
-	       UIManager.put("TabbedPane.highlight", ColorUIResource.GRAY);
-	       UIManager.put("TabbedPane.focus", ColorUIResource.BLACK);
-	       UIManager.put("TabbedPane.selectHighlight", ColorUIResource.GRAY);
-	       UIManager.put("TabbedPane.tabAreaBackground", ColorUIResource.BLACK);
-	       UIManager.put("TabbedPane.borderHightlightColor", ColorUIResource.BLACK);
-	       
-	       
-	       UIManager.put("TabbedPane.contentBorderInsets", ColorUIResource.BLACK);
-	       UIManager.put("TabbedPane.foreground", ColorUIResource.BLACK);
+		UIManager.put("TabbedPane.contentAreaColor ", ColorUIResource.BLACK);
+		UIManager.put("TabbedPane.selected", ColorUIResource.GRAY);
+		UIManager.put("TabbedPane.background", ColorUIResource.BLACK);
+		UIManager.put("TabbedPane.shadow", ColorUIResource.DARK_GRAY);
+		UIManager.put("TabbedPane.darkShadow", ColorUIResource.BLACK);
+		UIManager.put("TabbedPane.light", ColorUIResource.GRAY);
+		UIManager.put("TabbedPane.highlight", ColorUIResource.GRAY);
+		UIManager.put("TabbedPane.focus", ColorUIResource.BLACK);
+		UIManager.put("TabbedPane.selectHighlight", ColorUIResource.GRAY);
+		UIManager.put("TabbedPane.tabAreaBackground", ColorUIResource.BLACK);
+		UIManager.put("TabbedPane.borderHightlightColor", ColorUIResource.BLACK);
+
+		UIManager.put("TabbedPane.contentBorderInsets", ColorUIResource.BLACK);
+		UIManager.put("TabbedPane.foreground", ColorUIResource.BLACK);
 		addWindowFocusListener(new WindowFocusListener() {
 			public void windowGainedFocus(WindowEvent arg0) {
 				MiniUI.this.textField.requestFocus();
@@ -143,7 +143,7 @@ public class MiniUI extends JFrame implements UI {
 		// panelChat.add();
 		tabbedPane.addTab("Chat", panelChat);
 		this.panelChat.setLayout(null);
-		
+
 		this.textField = new JTextField();
 		this.textField.setFont(new Font("Tahoma", Font.BOLD, 12));
 		this.textField.setForeground(Color.WHITE);
@@ -156,22 +156,24 @@ public class MiniUI extends JFrame implements UI {
 		this.textField.setBounds(0, 242, 425, 20);
 		this.panelChat.add(this.textField);
 		this.textField.setColumns(10);
-		
+
 		this.scrollPane = new JScrollPane();
 		this.scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		this.scrollPane.setBounds(0, 0, 425, 231);
 		this.scrollPane.getVerticalScrollBar().setUI(new DarkScrollbarUI());
 		this.scrollPane.getHorizontalScrollBar().setUI(new DarkScrollbarUI());
 		this.panelChat.add(this.scrollPane);
-		
+
 		this.textPane = new JTextPane();
 		this.textPane.setFont(new Font("Tahoma", Font.BOLD, 14));
 		this.textPane.setEditable(false);
 		this.textPane.setBackground(Color.GRAY);
+		DefaultCaret caret = (DefaultCaret) textPane.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 		doc = textPane.getStyledDocument();
 
-        style = textPane.addStyle("Style", null);
-        StyleConstants.setForeground(style, Color.WHITE);
+		style = textPane.addStyle("Style", null);
+		StyleConstants.setForeground(style, Color.WHITE);
 		this.scrollPane.setViewportView(this.textPane);
 
 		panelOnline = new JPanel();
@@ -179,16 +181,17 @@ public class MiniUI extends JFrame implements UI {
 		// panel2.add(new JButton("Button des zweiten Tabs"));
 		tabbedPane.addTab("Online", panelOnline);
 		this.panelOnline.setLayout(null);
-		
+
 		this.textArea = new JTextArea();
 		this.textArea.setFont(new Font("Tahoma", Font.BOLD, 16));
 		this.textArea.setEditable(false);
 		this.textArea.setBackground(Color.GRAY);
 		this.textArea.setBounds(0, 0, 425, 230);
 		this.panelOnline.add(this.textArea);
-		
+
 		this.btnRefresh = new JButton("");
-		this.btnRefresh.setIcon(new ImageIcon(MiniUI.class.getResource("/com/sun/javafx/scene/web/skin/Redo_16x16_JFX.png")));
+		this.btnRefresh
+				.setIcon(new ImageIcon(MiniUI.class.getResource("/com/sun/javafx/scene/web/skin/Redo_16x16_JFX.png")));
 		this.btnRefresh.setFont(new Font("Tahoma", Font.BOLD, 15));
 		this.btnRefresh.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -198,7 +201,7 @@ public class MiniUI extends JFrame implements UI {
 		this.btnRefresh.setBackground(Color.DARK_GRAY);
 		this.btnRefresh.setBounds(0, 228, 425, 34);
 		this.panelOnline.add(this.btnRefresh);
-		
+
 		this.scrollPane_1 = new JScrollPane(textArea);
 		this.scrollPane_1.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		this.scrollPane_1.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -213,7 +216,6 @@ public class MiniUI extends JFrame implements UI {
 		this.tabbedPane.setForegroundAt(1, Color.WHITE);
 		this.contentPane.add(this.tabbedPane);
 
-		
 		// Tray Icon
 		if (SystemTray.isSupported()) {
 			System.out.println("system tray supported");
@@ -268,18 +270,19 @@ public class MiniUI extends JFrame implements UI {
 			 * forceNotification("LANChat", "Unregistered autostart."); } } });
 			 * popup.add(defaultItem);
 			 */
+			defaultItem = new MenuItem("Archive");
+			defaultItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					Archiver.archiveHistory();
+					reloadHistory();
+				}
+			});
+			popup.add(defaultItem);
 			defaultItem = new MenuItem("Exit");
 			defaultItem.addActionListener(exitListener);
 			popup.add(defaultItem);
 			trayIcon = new TrayIcon(image, "LANChat", popup);
 			trayIcon.setImageAutoSize(true);
-			trayIcon.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					setVisible(true);
-					setExtendedState(JFrame.NORMAL);
-				}
-			});
 			try {
 				tray.add(trayIcon);
 			} catch (AWTException e1) {
@@ -319,7 +322,7 @@ public class MiniUI extends JFrame implements UI {
 		});
 		setIconImage(Toolkit.getDefaultToolkit()
 				.getImage(GUI.class.getResource("/javax/swing/plaf/metal/icons/ocean/computer.gif")));
-		
+
 		this.server = new Server(this);
 		Thread t = new Thread(this.server);
 		t.start();
@@ -371,12 +374,12 @@ public class MiniUI extends JFrame implements UI {
 			String[] split = line[i].split(":");
 			try {
 				StyleConstants.setForeground(style, Color.GREEN);
-	            doc.insertString(doc.getLength(), split[0] + ":", style);
-	            StyleConstants.setForeground(style, Color.WHITE);
-	            doc.insertString(doc.getLength(), split[1] + "\n", style);
-	        } catch (BadLocationException ex) {
-	        	ex.printStackTrace();
-	        }
+				doc.insertString(doc.getLength(), split[0] + ":", style);
+				StyleConstants.setForeground(style, Color.WHITE);
+				doc.insertString(doc.getLength(), split[1] + "\n", style);
+			} catch (BadLocationException ex) {
+				ex.printStackTrace();
+			}
 		}
 	}
 
@@ -387,7 +390,7 @@ public class MiniUI extends JFrame implements UI {
 				if (value.equals(Config.load().getName()))
 					this.textArea.append("- " + value + " (You)" + "\n");
 				else
-					this.textArea.append(value + "\n");
+					this.textArea.append("- " + value + "\n");
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
