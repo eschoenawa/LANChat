@@ -77,7 +77,8 @@ public class GUI extends JFrame implements UI {
 			public void windowClosing(WindowEvent arg0) {
 				System.out.println("Sending goodbye...");
 				server.stopResponse();
-				tray.remove(trayIcon);
+				if (SystemTray.isSupported())
+					tray.remove(trayIcon);
 				try {
 					server.sendToBroadcast(Config.load().getUpdatePrefix());
 				} catch (IOException e) {
@@ -237,37 +238,37 @@ public class GUI extends JFrame implements UI {
 			} catch (AWTException e1) {
 				e1.printStackTrace();
 			}
+			addWindowStateListener(new WindowStateListener() {
+				public void windowStateChanged(WindowEvent e) {
+					if (e.getNewState() == ICONIFIED) {
+						setVisible(false);
+						System.out.println("Unset visible");
+					}
+					if (e.getNewState() == 7) {
+						setVisible(false);
+						System.out.println("Unset visible");
+					}
+					if (e.getNewState() == MAXIMIZED_BOTH) {
+						setVisible(true);
+						System.out.println("Set visible");
+					}
+					if (e.getNewState() == NORMAL) {
+						setVisible(true);
+						System.out.println("Set visible");
+					}
+				}
+			});
+			trayIcon.addMouseListener(new MouseAdapter() {
+				public void mouseClicked(MouseEvent e) {
+					if (e.getClickCount() == 1) {
+						setVisible(true);
+						setExtendedState(JFrame.NORMAL);
+					}
+				}
+			});
 		} else {
 			System.out.println("system tray not supported");
 		}
-		addWindowStateListener(new WindowStateListener() {
-			public void windowStateChanged(WindowEvent e) {
-				if (e.getNewState() == ICONIFIED) {
-					setVisible(false);
-					System.out.println("Unset visible");
-				}
-				if (e.getNewState() == 7) {
-					setVisible(false);
-					System.out.println("Unset visible");
-				}
-				if (e.getNewState() == MAXIMIZED_BOTH) {
-					setVisible(true);
-					System.out.println("Set visible");
-				}
-				if (e.getNewState() == NORMAL) {
-					setVisible(true);
-					System.out.println("Set visible");
-				}
-			}
-		});
-		trayIcon.addMouseListener(new MouseAdapter() {
-			public void mouseClicked(MouseEvent e) {
-				if (e.getClickCount() == 1) {
-					setVisible(true);
-					setExtendedState(JFrame.NORMAL);
-				}
-			}
-		});
 		setIconImage(Toolkit.getDefaultToolkit()
 				.getImage(GUI.class.getResource("/javax/swing/plaf/metal/icons/ocean/computer.gif")));
 
