@@ -15,6 +15,10 @@ import java.awt.Toolkit;
 import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -44,9 +48,12 @@ import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
+import de.eschoenawa.lanchat.updater.Updater;
+
 public class MiniUI extends JFrame implements UI {
 
 	private static final long serialVersionUID = 1L;
+	public static String version = "1.01";
 	private JPanel contentPane;
 	private TrayIcon trayIcon;
 	private SystemTray tray;
@@ -62,6 +69,8 @@ public class MiniUI extends JFrame implements UI {
 	private JTextPane textPane;
 	private StyledDocument doc;
 	private Style style;
+	private MenuItem onlineItem;
+	private boolean showNotification;
 
 	/**
 	 * Launch the application.
@@ -138,10 +147,17 @@ public class MiniUI extends JFrame implements UI {
 		this.tabbedPane.setBounds(10, 11, 430, 290);
 
 		panelChat = new JPanel();
+		this.panelChat.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentShown(ComponentEvent arg0) {
+				MiniUI.this.textField.requestFocus();
+			}
+		});
 		this.panelChat.setForeground(Color.BLACK);
 		this.panelChat.setBackground(Color.DARK_GRAY);
 		// panelChat.add();
 		tabbedPane.addTab("Chat", panelChat);
+		this.tabbedPane.setToolTipTextAt(0, "Communicate to own subnets broadcast.");
 		this.panelChat.setLayout(null);
 
 		this.textField = new JTextField();
@@ -177,9 +193,16 @@ public class MiniUI extends JFrame implements UI {
 		this.scrollPane.setViewportView(this.textPane);
 
 		panelOnline = new JPanel();
+		this.panelOnline.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentShown(ComponentEvent arg0) {
+				discover();
+			}
+		});
 		this.panelOnline.setBackground(Color.DARK_GRAY);
 		// panel2.add(new JButton("Button des zweiten Tabs"));
 		tabbedPane.addTab("Online", panelOnline);
+		this.tabbedPane.setToolTipTextAt(1, "Show who is online");
 		this.panelOnline.setLayout(null);
 
 		this.textArea = new JTextArea();
@@ -191,7 +214,7 @@ public class MiniUI extends JFrame implements UI {
 
 		this.btnRefresh = new JButton("");
 		this.btnRefresh
-				.setIcon(new ImageIcon(MiniUI.class.getResource("/com/sun/javafx/scene/web/skin/Redo_16x16_JFX.png")));
+		.setIcon(new ImageIcon(MiniUI.class.getResource("/com/sun/javafx/scene/web/skin/Redo_16x16_JFX.png")));
 		this.btnRefresh.setFont(new Font("Tahoma", Font.BOLD, 15));
 		this.btnRefresh.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -245,6 +268,20 @@ public class MiniUI extends JFrame implements UI {
 				}
 			});
 			popup.add(defaultItem);
+			popup.addSeparator();
+			onlineItem = new MenuItem("Hide Notifications");
+			onlineItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (showNotification) {
+						onlineItem.setLabel("Show Notifications");
+						showNotification = false;
+					} else {
+						onlineItem.setLabel("Hide Notifications");
+						showNotification = true;
+					}
+				}
+			});
+			popup.add(onlineItem);
 			defaultItem = new MenuItem("Set nickname...");
 			defaultItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
@@ -275,6 +312,34 @@ public class MiniUI extends JFrame implements UI {
 				public void actionPerformed(ActionEvent e) {
 					Archiver.archiveHistory();
 					reloadHistory();
+				}
+			});
+			defaultItem = new MenuItem("Update");
+			defaultItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					Updater frame = new Updater();
+					frame.setVisible(true);
+					if (frame.updateUpdater()) {
+						try {
+							Runtime.getRuntime().exec("javaw " + Updater.updater + " relaunch");
+							System.exit(0);
+						} catch (IOException e1) {
+							e1.printStackTrace();
+						}
+					}
+					else {
+						frame.dispose();
+						frame = null;
+						JOptionPane.showMessageDialog(null, "Failed to download! Check internet connection!", "Error", JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			});
+			popup.add(defaultItem);
+			popup.addSeparator();
+			defaultItem = new MenuItem("About");
+			defaultItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					JOptionPane.showMessageDialog(MiniUI.this, "Version: " + version + "\nLANChat by eschoenawa (2016)", "About", JOptionPane.INFORMATION_MESSAGE);
 				}
 			});
 			popup.add(defaultItem);
@@ -320,6 +385,26 @@ public class MiniUI extends JFrame implements UI {
 				}
 			}
 		});
+		textField.addKeyListener(new KeyListener() {
+
+			@Override
+			public void keyTyped(KeyEvent e) {
+			}
+
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.isAltDown() && e.isControlDown() && e.isShiftDown()) {
+					System.out.println("Administrative Message!");
+					String msg = "LANChat Admin" + ": " + JOptionPane.showInputDialog(null, "Enter Admin message:",
+							"Administrative message!", JOptionPane.INFORMATION_MESSAGE);
+					server.sendToBroadcast(msg);
+				}
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+			}
+		});
 		setIconImage(Toolkit.getDefaultToolkit()
 				.getImage(GUI.class.getResource("/javax/swing/plaf/metal/icons/ocean/computer.gif")));
 
@@ -329,6 +414,8 @@ public class MiniUI extends JFrame implements UI {
 
 		reloadHistory();
 		discover();
+
+		showNotification = true;
 	}
 
 	protected void sendText() {
@@ -352,7 +439,8 @@ public class MiniUI extends JFrame implements UI {
 	public void setNick() {
 		String newNick = JOptionPane.showInputDialog(this, "Please enter your new Nickname", "Enter nickname",
 				JOptionPane.QUESTION_MESSAGE);
-		if (newNick != null) {
+		if (newNick != null && newNick != "" && newNick.length() > 1 && newNick.length() <= 20
+				&& !(newNick.contains(" "))) {
 			try {
 				Config c = new Config(newNick, Config.load().getCommandPrefix(), Config.load().getResponsePrefix(),
 						Config.load().getUpdatePrefix());
@@ -365,6 +453,8 @@ public class MiniUI extends JFrame implements UI {
 				e.printStackTrace();
 			}
 			discover();
+		} else {
+			JOptionPane.showMessageDialog(this, "Nick not set.", "Info", JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
 
@@ -372,13 +462,37 @@ public class MiniUI extends JFrame implements UI {
 	public void println(String... line) {
 		for (int i = 0; i < line.length; i++) {
 			String[] split = line[i].split(":");
-			try {
-				StyleConstants.setForeground(style, Color.GREEN);
-				doc.insertString(doc.getLength(), split[0] + ":", style);
-				StyleConstants.setForeground(style, Color.WHITE);
-				doc.insertString(doc.getLength(), split[1] + "\n", style);
-			} catch (BadLocationException ex) {
-				ex.printStackTrace();
+			if (split[0].contains(" ")) {
+				System.out.println("Received Administrative Message!");
+				try {
+					StyleConstants.setForeground(style, Color.RED);
+					doc.insertString(doc.getLength(), split[0] + ":", style);
+					StyleConstants.setForeground(style, Color.WHITE);
+					for (int j = 1; j < split.length; j++) {
+						doc.insertString(doc.getLength(), split[j], style);
+						if (j+1 < split.length) {
+							doc.insertString(doc.getLength(), ":", style);
+						}
+					}
+					doc.insertString(doc.getLength(), "\n", style);
+				} catch (BadLocationException ex) {
+					ex.printStackTrace();
+				}
+			} else {
+				try {
+					StyleConstants.setForeground(style, Color.GREEN);
+					doc.insertString(doc.getLength(), split[0] + ":", style);
+					StyleConstants.setForeground(style, Color.WHITE);
+					for (int j = 1; j < split.length; j++) {
+						doc.insertString(doc.getLength(), split[j], style);
+						if (j+1 < split.length) {
+							doc.insertString(doc.getLength(), ":", style);
+						}
+					}
+					doc.insertString(doc.getLength(), "\n", style);
+				} catch (BadLocationException ex) {
+					ex.printStackTrace();
+				}
 			}
 		}
 	}
@@ -412,7 +526,7 @@ public class MiniUI extends JFrame implements UI {
 	}
 
 	private void notification(String title, String message) {
-		if (!this.isVisible()) {
+		if (!this.isVisible() && showNotification) {
 			trayIcon.displayMessage(title, message, TrayIcon.MessageType.INFO);
 		}
 	}

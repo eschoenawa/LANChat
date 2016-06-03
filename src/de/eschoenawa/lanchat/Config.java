@@ -86,7 +86,20 @@ public class Config {
 		BufferedReader br = new BufferedReader(new FileReader(CONFIG_PATH));
 		String json = br.readLine();
 		br.close();
-		return gson.fromJson(json, Config.class);
+		Config confg = gson.fromJson(json, Config.class);
+		if (confg.getName().contains(" ")) {
+			confg.setName(confg.getName().replace(" ", ""));
+			confg.export();
+		}
+		if (confg.getName().length() > 20) {
+			confg.setName(confg.getName().substring(0, 18) + "..");
+			confg.export();
+		}
+		if (confg.getName().length() < 2) {
+			confg.setName(DEFAULT_NAME);
+			confg.export();
+		}
+		return confg;
 	}
 
 }

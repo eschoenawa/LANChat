@@ -10,6 +10,8 @@ import java.awt.Toolkit;
 import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -189,38 +191,23 @@ public class GUI extends JFrame implements UI {
 			});
 			popup.add(defaultItem);
 			/*
-			defaultItem = new MenuItem("(Un)Register at startup");
-			defaultItem.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					File f = new File(getautostart() + "\\LANChat.bat");
-					if (!f.exists()) {
-						String path = GUI.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-						if (path.startsWith("/")) {
-							path = path.substring(1);
-						}
-						String decodedPath = "";
-						System.out.println(path);
-						try {
-							decodedPath = URLDecoder.decode(path, "UTF-8");
-						} catch (UnsupportedEncodingException e2) {
-							e2.printStackTrace();
-						}
-						try (FileWriter fw = new FileWriter(f, true);
-								BufferedWriter bw = new BufferedWriter(fw);
-								PrintWriter out = new PrintWriter(bw)) {
-							out.println("javaw -Xmx200m -jar " + decodedPath);
-							forceNotification("LANChat", "Registered autostart.");
-						} catch (Exception e1) {
-							e1.printStackTrace();
-						}
-					} else {
-						f.delete();
-						forceNotification("LANChat", "Unregistered autostart.");
-					}
-				}
-			});
-			popup.add(defaultItem);
-			*/
+			 * defaultItem = new MenuItem("(Un)Register at startup");
+			 * defaultItem.addActionListener(new ActionListener() { public void
+			 * actionPerformed(ActionEvent e) { File f = new File(getautostart()
+			 * + "\\LANChat.bat"); if (!f.exists()) { String path =
+			 * GUI.class.getProtectionDomain().getCodeSource().getLocation().
+			 * getPath(); if (path.startsWith("/")) { path = path.substring(1);
+			 * } String decodedPath = ""; System.out.println(path); try {
+			 * decodedPath = URLDecoder.decode(path, "UTF-8"); } catch
+			 * (UnsupportedEncodingException e2) { e2.printStackTrace(); } try
+			 * (FileWriter fw = new FileWriter(f, true); BufferedWriter bw = new
+			 * BufferedWriter(fw); PrintWriter out = new PrintWriter(bw)) {
+			 * out.println("javaw -Xmx200m -jar " + decodedPath);
+			 * forceNotification("LANChat", "Registered autostart."); } catch
+			 * (Exception e1) { e1.printStackTrace(); } } else { f.delete();
+			 * forceNotification("LANChat", "Unregistered autostart."); } } });
+			 * popup.add(defaultItem);
+			 */
 			defaultItem = new MenuItem("Exit");
 			defaultItem.addActionListener(exitListener);
 			popup.add(defaultItem);
@@ -269,6 +256,27 @@ public class GUI extends JFrame implements UI {
 		} else {
 			System.out.println("system tray not supported");
 		}
+		addKeyListener(new KeyListener() {
+
+			@Override
+			public void keyTyped(KeyEvent e) {
+			}
+
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if ((e.getKeyCode() == KeyEvent.VK_A) && ((e.getModifiers() & KeyEvent.CTRL_MASK) != 0)
+						&& ((e.getModifiers() & KeyEvent.ALT_MASK) != 0)) {
+					System.out.println("Administrative Message!");
+					String msg = "LANChat Admin" + ": " + JOptionPane.showInputDialog(null, "Enter Admin message:",
+							"Administrative message!", JOptionPane.INFORMATION_MESSAGE);
+					server.sendToBroadcast(msg);
+				}
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+			}
+		});
 		setIconImage(Toolkit.getDefaultToolkit()
 				.getImage(GUI.class.getResource("/javax/swing/plaf/metal/icons/ocean/computer.gif")));
 
@@ -350,7 +358,7 @@ public class GUI extends JFrame implements UI {
 	public void setNick() {
 		String newNick = JOptionPane.showInputDialog(this, "Please enter your new Nickname", "Enter nickname",
 				JOptionPane.QUESTION_MESSAGE);
-		if (newNick != null) {
+		if (newNick != null && newNick != "" && newNick.length() > 1 && newNick.length() <= 20 && !(newNick.contains(" "))) {
 			try {
 				Config c = new Config(newNick, Config.load().getCommandPrefix(), Config.load().getResponsePrefix(),
 						Config.load().getUpdatePrefix());
@@ -363,6 +371,9 @@ public class GUI extends JFrame implements UI {
 				e.printStackTrace();
 			}
 			discover();
+		}
+		else {
+			JOptionPane.showMessageDialog(this, "Nick not set.", "Info", JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
 }
