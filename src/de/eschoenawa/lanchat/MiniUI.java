@@ -24,6 +24,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -76,6 +77,9 @@ public class MiniUI extends JFrame implements UI {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
+		File f = new File(Updater.updater);
+		if (f.exists())
+			f.delete();
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -318,17 +322,15 @@ public class MiniUI extends JFrame implements UI {
 			defaultItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					Updater frame = new Updater();
-					frame.setVisible(true);
 					if (frame.updateUpdater()) {
 						try {
-							Runtime.getRuntime().exec("javaw " + Updater.updater + " relaunch");
+							Runtime.getRuntime().exec("java -jar " + Updater.updater + " relaunch");
 							System.exit(0);
 						} catch (IOException e1) {
 							e1.printStackTrace();
 						}
 					}
 					else {
-						frame.dispose();
 						frame = null;
 						JOptionPane.showMessageDialog(null, "Failed to download! Check internet connection!", "Error", JOptionPane.ERROR_MESSAGE);
 					}
