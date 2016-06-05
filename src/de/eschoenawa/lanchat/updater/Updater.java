@@ -14,6 +14,7 @@ public class Updater {
 	public static String unset = "[not set]";
 	public static String jarloc = "https://dl.dropboxusercontent.com/u/44998952/LANChat/LANChat.jar";
 	public static String updloc = "https://dl.dropboxusercontent.com/u/44998952/LANChat/Updater.jar";
+	public static String versionloc = "https://dl.dropboxusercontent.com/u/44998952/LANChat/version.txt";
 	public static String updater = "Updater.jar";
 	public static String jar = "LANChat.jar";
 

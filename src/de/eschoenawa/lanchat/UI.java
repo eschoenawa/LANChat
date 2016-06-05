@@ -9,5 +9,9 @@ public interface UI {
 	public void discover();
 
 	public void receive(String received);
+	
+	public void showUI();
+	
+	public boolean isShown();
 
 }

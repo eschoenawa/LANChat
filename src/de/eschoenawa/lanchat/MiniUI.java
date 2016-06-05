@@ -27,11 +27,15 @@ import java.awt.event.WindowFocusListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.util.Scanner;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -54,7 +58,8 @@ import de.eschoenawa.lanchat.updater.Updater;
 public class MiniUI extends JFrame implements UI {
 
 	private static final long serialVersionUID = 1L;
-	public static String version = "1.04";
+	public static String version = "1.05";
+	private static String upd = "Newer version available (";
 	private JPanel contentPane;
 	private TrayIcon trayIcon;
 	private SystemTray tray;
@@ -72,6 +77,7 @@ public class MiniUI extends JFrame implements UI {
 	private Style style;
 	private MenuItem onlineItem;
 	private boolean showNotification;
+	private JLabel lblUpdate;
 
 	/**
 	 * Launch the application.
@@ -243,6 +249,21 @@ public class MiniUI extends JFrame implements UI {
 		this.tabbedPane.setForegroundAt(1, Color.WHITE);
 		this.contentPane.add(this.tabbedPane);
 
+		this.lblUpdate = new JLabel("");
+		this.lblUpdate.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				if (lblUpdate.getText().startsWith(upd)) {
+					System.out.println("Updating!");
+					update();
+				}
+			}
+		});
+		this.lblUpdate.setFont(new Font("Tahoma", Font.BOLD, 11));
+		this.lblUpdate.setForeground(Color.GREEN);
+		this.lblUpdate.setBounds(140, 0, 310, 15);
+		this.contentPane.add(this.lblUpdate);
+
 		// Tray Icon
 		if (SystemTray.isSupported()) {
 			System.out.println("system tray supported");
@@ -323,28 +344,7 @@ public class MiniUI extends JFrame implements UI {
 			defaultItem = new MenuItem("Update");
 			defaultItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					Updater frame = new Updater();
-					if (frame.updateUpdater()) {
-						System.out.println("Exiting....");
-						server.stopResponse();
-						if (SystemTray.isSupported())
-							tray.remove(trayIcon);
-						try {
-							server.sendToBroadcast(Config.load().getUpdatePrefix());
-						} catch (IOException io) {
-							io.printStackTrace();
-						}
-						try {
-							Runtime.getRuntime().exec("java -jar " + Updater.updater + " relaunch");
-							System.exit(0);
-						} catch (IOException e1) {
-							e1.printStackTrace();
-						}
-					}
-					else {
-						frame = null;
-						JOptionPane.showMessageDialog(null, "Failed to download! Check internet connection!", "Error", JOptionPane.ERROR_MESSAGE);
-					}
+					update();
 				}
 			});
 			popup.add(defaultItem);
@@ -352,7 +352,8 @@ public class MiniUI extends JFrame implements UI {
 			defaultItem = new MenuItem("About");
 			defaultItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					JOptionPane.showMessageDialog(MiniUI.this, "Version: " + version + "\nLANChat by eschoenawa (2016)", "About", JOptionPane.INFORMATION_MESSAGE);
+					JOptionPane.showMessageDialog(MiniUI.this, "Version: " + version + "\nLANChat by eschoenawa (2016)",
+							"About", JOptionPane.INFORMATION_MESSAGE);
 				}
 			});
 			popup.add(defaultItem);
@@ -429,6 +430,47 @@ public class MiniUI extends JFrame implements UI {
 		discover();
 
 		showNotification = true;
+
+		updateCheck();
+	}
+
+	protected void update() {
+		boolean b = false;
+		if (version.endsWith("dev") || version.endsWith("custom")) {
+			int i = JOptionPane.showConfirmDialog(MiniUI.this,
+					"Updating will overwrite your custom version with the normal one. Are you sure?",
+					"Custom or development Version detected!", JOptionPane.YES_NO_OPTION);
+			if (i == 0)
+				b = true;
+			else
+				b = false;
+
+		} else
+			b = true;
+		if (b) {
+			Updater frame = new Updater();
+			if (frame.updateUpdater()) {
+				System.out.println("Exiting....");
+				server.stopResponse();
+				if (SystemTray.isSupported())
+					tray.remove(trayIcon);
+				try {
+					server.sendToBroadcast(Config.load().getUpdatePrefix());
+				} catch (IOException io) {
+					io.printStackTrace();
+				}
+				try {
+					Runtime.getRuntime().exec("java -jar " + Updater.updater + " relaunch");
+					System.exit(0);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			} else {
+				frame = null;
+				JOptionPane.showMessageDialog(null, "Failed to download! Check internet connection!", "Error",
+						JOptionPane.ERROR_MESSAGE);
+			}
+		}
 	}
 
 	protected void sendText() {
@@ -474,37 +516,41 @@ public class MiniUI extends JFrame implements UI {
 	@Override
 	public void println(String... line) {
 		for (int i = 0; i < line.length; i++) {
-			String[] split = line[i].split(":");
-			if (split[0].contains(" ")) {
-				System.out.println("Received Administrative Message!");
-				try {
-					StyleConstants.setForeground(style, Color.RED);
-					doc.insertString(doc.getLength(), split[0] + ":", style);
-					StyleConstants.setForeground(style, Color.WHITE);
-					for (int j = 1; j < split.length; j++) {
-						doc.insertString(doc.getLength(), split[j], style);
-						if (j+1 < split.length) {
-							doc.insertString(doc.getLength(), ":", style);
-						}
-					}
-					doc.insertString(doc.getLength(), "\n", style);
-				} catch (BadLocationException ex) {
-					ex.printStackTrace();
-				}
+			if (!line[i].contains(":")) {
+				System.out.println("Recieved invalid message: " + line[i]);
 			} else {
-				try {
-					StyleConstants.setForeground(style, Color.GREEN);
-					doc.insertString(doc.getLength(), split[0] + ":", style);
-					StyleConstants.setForeground(style, Color.WHITE);
-					for (int j = 1; j < split.length; j++) {
-						doc.insertString(doc.getLength(), split[j], style);
-						if (j+1 < split.length) {
-							doc.insertString(doc.getLength(), ":", style);
+				String[] split = line[i].split(":");
+				if (split[0].contains(" ")) {
+					System.out.println("Received Administrative Message!");
+					try {
+						StyleConstants.setForeground(style, Color.RED);
+						doc.insertString(doc.getLength(), split[0] + ":", style);
+						StyleConstants.setForeground(style, Color.WHITE);
+						for (int j = 1; j < split.length; j++) {
+							doc.insertString(doc.getLength(), split[j], style);
+							if (j + 1 < split.length) {
+								doc.insertString(doc.getLength(), ":", style);
+							}
 						}
+						doc.insertString(doc.getLength(), "\n", style);
+					} catch (BadLocationException ex) {
+						ex.printStackTrace();
 					}
-					doc.insertString(doc.getLength(), "\n", style);
-				} catch (BadLocationException ex) {
-					ex.printStackTrace();
+				} else {
+					try {
+						StyleConstants.setForeground(style, Color.GREEN);
+						doc.insertString(doc.getLength(), split[0] + ":", style);
+						StyleConstants.setForeground(style, Color.WHITE);
+						for (int j = 1; j < split.length; j++) {
+							doc.insertString(doc.getLength(), split[j], style);
+							if (j + 1 < split.length) {
+								doc.insertString(doc.getLength(), ":", style);
+							}
+						}
+						doc.insertString(doc.getLength(), "\n", style);
+					} catch (BadLocationException ex) {
+						ex.printStackTrace();
+					}
 				}
 			}
 			textPane.setCaretPosition(doc.getLength());
@@ -541,7 +587,60 @@ public class MiniUI extends JFrame implements UI {
 
 	private void notification(String title, String message) {
 		if (!this.isVisible() && showNotification) {
-			trayIcon.displayMessage(title, message, TrayIcon.MessageType.INFO);
+			// deprecated: trayIcon.displayMessage(title, message,
+			// TrayIcon.MessageType.INFO);
+			Notification.showNotification(message, title, this);
 		}
+	}
+
+	public static String getCurrentVersion() {
+		try {
+			URL url = new URL(Updater.versionloc);
+			InputStream is = url.openStream();
+			// For some reason this suppress is required.
+			@SuppressWarnings("resource")
+			Scanner s = new Scanner(is).useDelimiter("\\A");
+			String result = s.hasNext() ? s.next() : "";
+			s.close();
+			return result;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "[unknown]";
+		}
+	}
+
+	public void updateCheck() {
+		new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				String s = getCurrentVersion();
+				if (version.endsWith("dev")) {
+					lblUpdate.setText("Development Version");
+					lblUpdate.setForeground(Color.YELLOW);
+				} else if (version.endsWith("custom")) {
+					lblUpdate.setText("Custom Version");
+					lblUpdate.setForeground(Color.DARK_GRAY);
+				} else if (!version.equals(s)) {
+					if (s.equals("[unknown]")) {
+						lblUpdate.setText("No internet connection!");
+						lblUpdate.setForeground(Color.DARK_GRAY);
+					}
+					else
+						lblUpdate.setText(upd + s + ") Click to update!");
+				}
+			}
+
+		}).start();
+	}
+
+	@Override
+	public void showUI() {
+		this.setVisible(true);
+	}
+
+	@Override
+	public boolean isShown() {
+		return this.isVisible();
 	}
 }

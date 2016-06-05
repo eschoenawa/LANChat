@@ -376,4 +376,13 @@ public class GUI extends JFrame implements UI {
 			JOptionPane.showMessageDialog(this, "Nick not set.", "Info", JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
+	@Override
+	public void showUI() {
+		this.setVisible(true);
+	}
+
+	@Override
+	public boolean isShown() {
+		return this.isVisible();
+	}
 }
