@@ -4,7 +4,7 @@ public interface UI {
 
 	public void println(String... line);
 
-	public void addValue(String value);
+	public void addValue(String value, String ip);
 
 	public void discover();
 

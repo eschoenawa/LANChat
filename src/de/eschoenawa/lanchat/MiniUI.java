@@ -125,6 +125,7 @@ public class MiniUI extends JFrame implements UI {
 		addWindowFocusListener(new WindowFocusListener() {
 			public void windowGainedFocus(WindowEvent arg0) {
 				MiniUI.this.textField.requestFocus();
+				textPane.setCaretPosition(doc.getLength());
 			}
 
 			public void windowLostFocus(WindowEvent arg0) {
@@ -369,6 +370,10 @@ public class MiniUI extends JFrame implements UI {
 			}
 		} else {
 			System.out.println("system tray not supported");
+			JOptionPane.showMessageDialog(null,
+					"WARNING: System Tray not supported on this System! LANChat only works on systems supporting the java.awt.SystemTray class.",
+					"Fatal Error", JOptionPane.ERROR_MESSAGE);
+			System.exit(1);
 		}
 		// addWindowStateListener(new WindowStateListener() {
 		// public void windowStateChanged(WindowEvent e) {
@@ -409,9 +414,18 @@ public class MiniUI extends JFrame implements UI {
 			public void keyPressed(KeyEvent e) {
 				if (e.isAltDown() && e.isControlDown() && e.isShiftDown()) {
 					System.out.println("Administrative Message!");
-					String msg = "LANChat Admin" + ": " + JOptionPane.showInputDialog(null, "Enter Admin message:",
-							"Administrative message!", JOptionPane.INFORMATION_MESSAGE);
-					server.sendToBroadcast(msg);
+					String submsg = JOptionPane.showInputDialog(null, "Enter Admin message:", "Administrative message!",
+							JOptionPane.INFORMATION_MESSAGE);
+					String msg = "LANChat Admin" + ": " + submsg;
+					if (submsg != null)
+						server.sendToBroadcast(msg);
+					else {
+						try {
+							server.sendToBroadcast(Config.load().getUpdatePrefix());
+						} catch (IOException io) {
+							io.printStackTrace();
+						}
+					}
 				}
 			}
 
@@ -431,7 +445,18 @@ public class MiniUI extends JFrame implements UI {
 
 		showNotification = true;
 
-		updateCheck();
+		// replaced by auto-update at startup
+		// updateCheck();
+
+		// auto-update
+		String s = getCurrentVersion();
+		if (s != version && !(version.endsWith("dev")) && !(version.endsWith("custom")) && !(s.equals("[unknown]"))) {
+			System.out.println("Newer version available, updating...");
+			update();
+		} else {
+			System.out.println("No new Updates.");
+			updateCheck();
+		}
 	}
 
 	protected void update() {
@@ -440,11 +465,7 @@ public class MiniUI extends JFrame implements UI {
 			int i = JOptionPane.showConfirmDialog(MiniUI.this,
 					"Updating will overwrite your custom version with the normal one. Are you sure?",
 					"Custom or development Version detected!", JOptionPane.YES_NO_OPTION);
-			if (i == 0)
-				b = true;
-			else
-				b = false;
-
+			b = (i == 0);
 		} else
 			b = true;
 		if (b) {
@@ -467,8 +488,8 @@ public class MiniUI extends JFrame implements UI {
 				}
 			} else {
 				frame = null;
-				JOptionPane.showMessageDialog(null, "Failed to download! Check internet connection!", "Error",
-						JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(null, "Failed to download new update! Check internet connection!",
+						"Error", JOptionPane.ERROR_MESSAGE);
 			}
 		}
 	}
@@ -558,13 +579,13 @@ public class MiniUI extends JFrame implements UI {
 	}
 
 	@Override
-	public void addValue(String value) {
+	public void addValue(String value, String ip) {
 		try {
 			if (!(this.textArea.getText().contains(value))) {
-				if (value.equals(Config.load().getName()))
+				if (value.equals(Config.load().getName() + " (v" + version + ")"))
 					this.textArea.append("- " + value + " (You)" + "\n");
 				else
-					this.textArea.append("- " + value + "\n");
+					this.textArea.append("- " + value + " (" + ip + ")" + "\n");
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -576,6 +597,7 @@ public class MiniUI extends JFrame implements UI {
 	public void discover() {
 		this.textArea.setText("");
 		server.sendDiscoveryMessage();
+		this.updateCheck();
 	}
 
 	@Override
@@ -625,8 +647,7 @@ public class MiniUI extends JFrame implements UI {
 					if (s.equals("[unknown]")) {
 						lblUpdate.setText("No internet connection!");
 						lblUpdate.setForeground(Color.DARK_GRAY);
-					}
-					else
+					} else
 						lblUpdate.setText(upd + s + ") Click to update!");
 				}
 			}
@@ -637,6 +658,7 @@ public class MiniUI extends JFrame implements UI {
 	@Override
 	public void showUI() {
 		this.setVisible(true);
+		this.toFront();
 	}
 
 	@Override

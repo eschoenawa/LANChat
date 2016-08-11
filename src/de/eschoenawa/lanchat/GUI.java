@@ -308,7 +308,7 @@ public class GUI extends JFrame implements UI {
 		Chat.load(this);
 	}
 
-	public void addValue(String value) {
+	public void addValue(String value, String ip) {
 		try {
 			if (!(this.textAreaOnline.getText().contains(value))) {
 				if (value.equals(Config.load().getName()))

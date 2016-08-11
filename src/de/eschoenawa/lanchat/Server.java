@@ -33,11 +33,11 @@ public class Server implements Runnable {
 				System.out.println("Received: " + received + " from " + ip.toString());
 				if (received.toLowerCase().startsWith(Config.load().getCommandPrefix()) && response) {
 					String value = received.split(":")[1];
-					parent.addValue(value);
-					send(ip, Config.load().getResponsePrefix() + Config.load().getName());
+					parent.addValue(value, packet.getAddress().getHostAddress());
+					send(ip, Config.load().getResponsePrefix() + Config.load().getName() + " (v" + MiniUI.version + ")");
 				} else if (received.toLowerCase().startsWith(Config.load().getResponsePrefix()) && response) {
 					String value = received.split(":")[1];
-					parent.addValue(value);
+					parent.addValue(value, packet.getAddress().getHostAddress());
 				} 
 				else if (received.toLowerCase().startsWith(Config.load().getUpdatePrefix())) {
 					if (response)
@@ -65,7 +65,7 @@ public class Server implements Runnable {
 
 	public void sendDiscoveryMessage() {
 		try {
-			sendToBroadcast(Config.load().getCommandPrefix() + Config.load().getName());
+			sendToBroadcast(Config.load().getCommandPrefix() + Config.load().getName() + " (v" + MiniUI.version + ")");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
