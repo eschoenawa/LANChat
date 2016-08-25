@@ -56,7 +56,7 @@ import de.eschoenawa.lanchat.updater.Updater;
 public class MiniUI extends JFrame implements UI {
 
 	private static final long serialVersionUID = 1L;
-	public static String version = "1.06_dev";
+	public static String version = "1.06";
 	private static String upd = "Newer version available (";
 	private JPanel contentPane;
 	private TrayIcon trayIcon;
