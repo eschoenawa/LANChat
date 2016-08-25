@@ -56,7 +56,7 @@ import de.eschoenawa.lanchat.updater.Updater;
 public class MiniUI extends JFrame implements UI {
 
 	private static final long serialVersionUID = 1L;
-	public static String version = "1.06";
+	public static String version = "1.06.1";
 	private static String upd = "Newer version available (";
 	private JPanel contentPane;
 	private TrayIcon trayIcon;
@@ -440,7 +440,7 @@ public class MiniUI extends JFrame implements UI {
 
 		// auto-update
 		String s = getCurrentVersion();
-		if (s != version && !(version.endsWith("dev")) && !(version.endsWith("custom")) && !(s.equals("[unknown]"))) {
+		if (!(s.equals(version)) && !(version.endsWith("dev")) && !(version.endsWith("custom")) && !(s.equals("[unknown]"))) {
 			System.out.println("Newer version available, updating...");
 			update();
 		} else {
@@ -590,6 +590,8 @@ public class MiniUI extends JFrame implements UI {
 			@SuppressWarnings("resource")
 			Scanner s = new Scanner(is).useDelimiter("\\A");
 			String result = s.hasNext() ? s.next() : "";
+			System.out.println("Current version: " + version);
+			System.out.println("New version: " + result);
 			s.close();
 			return result;
 		} catch (IOException e) {
