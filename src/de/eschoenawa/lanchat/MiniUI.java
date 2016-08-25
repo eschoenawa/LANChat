@@ -25,10 +25,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.Scanner;
 
@@ -271,18 +269,14 @@ public class MiniUI extends JFrame implements UI {
 			tray = SystemTray.getSystemTray();
 
 			Image image = Toolkit.getDefaultToolkit()
-					.getImage(GUI.class.getResource("/javax/swing/plaf/metal/icons/ocean/computer.gif"));
+					.getImage(MiniUI.class.getResource("/javax/swing/plaf/metal/icons/ocean/computer.gif"));
 			ActionListener exitListener = new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					System.out.println("Exiting....");
 					server.stopResponse();
 					if (SystemTray.isSupported())
 						tray.remove(trayIcon);
-					try {
-						server.sendToBroadcast(Config.load().getUpdatePrefix());
-					} catch (IOException io) {
-						io.printStackTrace();
-					}
+					server.sendToBroadcast(Config.get("update_prefix"));
 					System.exit(0);
 				}
 			};
@@ -413,18 +407,14 @@ public class MiniUI extends JFrame implements UI {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.isAltDown() && e.isControlDown() && e.isShiftDown()) {
-					System.out.println("Administrative Message!");
-					String submsg = JOptionPane.showInputDialog(null, "Enter Admin message:", "Administrative message!",
+					System.out.println("Shout!");
+					String submsg = JOptionPane.showInputDialog(null, "Enter message:", "Shout",
 							JOptionPane.INFORMATION_MESSAGE);
-					String msg = "LANChat Admin" + ": " + submsg;
+					String msg = Config.get("name") + " shouts" + ": " + submsg;
 					if (submsg != null)
 						server.sendToBroadcast(msg);
 					else {
-						try {
-							server.sendToBroadcast(Config.load().getUpdatePrefix());
-						} catch (IOException io) {
-							io.printStackTrace();
-						}
+						server.sendToBroadcast(Config.get("update_prefix"));
 					}
 				}
 			}
@@ -434,7 +424,7 @@ public class MiniUI extends JFrame implements UI {
 			}
 		});
 		setIconImage(Toolkit.getDefaultToolkit()
-				.getImage(GUI.class.getResource("/javax/swing/plaf/metal/icons/ocean/computer.gif")));
+				.getImage(MiniUI.class.getResource("/javax/swing/plaf/metal/icons/ocean/computer.gif")));
 
 		this.server = new Server(this);
 		Thread t = new Thread(this.server);
@@ -475,11 +465,7 @@ public class MiniUI extends JFrame implements UI {
 				server.stopResponse();
 				if (SystemTray.isSupported())
 					tray.remove(trayIcon);
-				try {
-					server.sendToBroadcast(Config.load().getUpdatePrefix());
-				} catch (IOException io) {
-					io.printStackTrace();
-				}
+				server.sendToBroadcast(Config.get("update_prefix"));
 				try {
 					Runtime.getRuntime().exec("java -jar " + Updater.updater + " relaunch");
 					System.exit(0);
@@ -496,12 +482,8 @@ public class MiniUI extends JFrame implements UI {
 
 	protected void sendText() {
 		if (!this.textField.getText().equals("")) {
-			try {
-				String msg = Config.load().getName() + ": " + this.textField.getText();
-				server.sendToBroadcast(msg);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			String msg = Config.get("name") + ": " + this.textField.getText();
+			server.sendToBroadcast(msg);
 			this.textField.setText("");
 			this.textField.requestFocusInWindow();
 		}
@@ -517,17 +499,7 @@ public class MiniUI extends JFrame implements UI {
 				JOptionPane.QUESTION_MESSAGE);
 		if (newNick != null && newNick != "" && newNick.length() > 1 && newNick.length() <= 20
 				&& !(newNick.contains(" "))) {
-			try {
-				Config c = new Config(newNick, Config.load().getCommandPrefix(), Config.load().getResponsePrefix(),
-						Config.load().getUpdatePrefix());
-				c.export();
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			Config.set("name", newNick);
 			discover();
 		} else {
 			JOptionPane.showMessageDialog(this, "Nick not set.", "Info", JOptionPane.INFORMATION_MESSAGE);
@@ -542,7 +514,7 @@ public class MiniUI extends JFrame implements UI {
 			} else {
 				String[] split = line[i].split(":");
 				if (split[0].contains(" ")) {
-					System.out.println("Received Administrative Message!");
+					System.out.println("Received loud Message!");
 					try {
 						StyleConstants.setForeground(style, Color.RED);
 						doc.insertString(doc.getLength(), split[0] + ":", style);
@@ -580,16 +552,11 @@ public class MiniUI extends JFrame implements UI {
 
 	@Override
 	public void addValue(String value, String ip) {
-		try {
-			if (!(this.textArea.getText().contains(value))) {
-				if (value.equals(Config.load().getName() + " (v" + version + ")"))
-					this.textArea.append("- " + value + " (You)" + "\n");
-				else
-					this.textArea.append("- " + value + " (" + ip + ")" + "\n");
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			this.textArea.setText("Config loading failed!");
+		if (!(this.textArea.getText().contains(value))) {
+			if (value.equals(Config.get("name") + " (v" + version + ")"))
+				this.textArea.append("- " + value + " (You)" + "\n");
+			else
+				this.textArea.append("- " + value + "\n");
 		}
 	}
 

@@ -31,15 +31,15 @@ public class Server implements Runnable {
 				InetAddress ip = packet.getAddress();
 				String received = new String(packet.getData(), 0, packet.getLength());
 				System.out.println("Received: " + received + " from " + ip.toString());
-				if (received.toLowerCase().startsWith(Config.load().getCommandPrefix()) && response) {
+				if (received.toLowerCase().startsWith(Config.get("command_prefix")) && response) {
 					String value = received.split(":")[1];
 					parent.addValue(value, packet.getAddress().getHostAddress());
-					send(ip, Config.load().getResponsePrefix() + Config.load().getName() + " (v" + MiniUI.version + ")");
-				} else if (received.toLowerCase().startsWith(Config.load().getResponsePrefix()) && response) {
+					send(ip, Config.get("response_prefix") + Config.get("name") + " (v" + MiniUI.version + ")");
+				} else if (received.toLowerCase().startsWith(Config.get("response_prefix")) && response) {
 					String value = received.split(":")[1];
 					parent.addValue(value, packet.getAddress().getHostAddress());
 				} 
-				else if (received.toLowerCase().startsWith(Config.load().getUpdatePrefix())) {
+				else if (received.toLowerCase().startsWith(Config.get("update_prefix"))) {
 					if (response)
 						parent.discover();
 				}
@@ -64,11 +64,7 @@ public class Server implements Runnable {
 	}
 
 	public void sendDiscoveryMessage() {
-		try {
-			sendToBroadcast(Config.load().getCommandPrefix() + Config.load().getName() + " (v" + MiniUI.version + ")");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		sendToBroadcast(Config.get("command_prefix") + Config.get("name") + " (v" + MiniUI.version + ")");
 	}
 	
 	public void sendToBroadcast(String s) {
