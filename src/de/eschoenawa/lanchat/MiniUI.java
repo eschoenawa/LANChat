@@ -56,7 +56,7 @@ import de.eschoenawa.lanchat.updater.Updater;
 public class MiniUI extends JFrame implements UI {
 
 	private static final long serialVersionUID = 1L;
-	public static String version = "1.06.1";
+	public static String version = "1.07_dev";
 	private static String upd = "Newer version available (";
 	private JPanel contentPane;
 	private TrayIcon trayIcon;
@@ -95,6 +95,9 @@ public class MiniUI extends JFrame implements UI {
 					int x = (int) rect.getMaxX() - frame.getWidth();
 					int y = (int) rect.getMaxY() - frame.getHeight();
 					frame.setLocation(x, y);
+					//Previously set to true, but this zigzag is required for proper downscoll.
+					if (Boolean.parseBoolean(Config.get("minimized")))
+						frame.setVisible(false);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -293,20 +296,14 @@ public class MiniUI extends JFrame implements UI {
 			onlineItem = new MenuItem("Hide Notifications");
 			onlineItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					if (showNotification) {
-						onlineItem.setLabel("Show Notifications");
-						showNotification = false;
-					} else {
-						onlineItem.setLabel("Hide Notifications");
-						showNotification = true;
-					}
+					setShowNotifications(!showNotification);
 				}
 			});
 			popup.add(onlineItem);
-			defaultItem = new MenuItem("Set nickname...");
+			defaultItem = new MenuItem("Settings...");
 			defaultItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					setNick();
+					settings();
 				}
 			});
 			popup.add(defaultItem);
@@ -439,12 +436,17 @@ public class MiniUI extends JFrame implements UI {
 		// updateCheck();
 
 		// auto-update
-		String s = getCurrentVersion();
-		if (!(s.equals(version)) && !(version.endsWith("dev")) && !(version.endsWith("custom")) && !(s.equals("[unknown]"))) {
-			System.out.println("Newer version available, updating...");
-			update();
-		} else {
-			System.out.println("No new Updates.");
+		if (Boolean.parseBoolean(Config.get("autoupdate"))) {
+			String s = getCurrentVersion();
+			if (!(s.equals(version)) && !(version.endsWith("dev")) && !(version.endsWith("custom")) && !(s.equals("[unknown]"))) {
+				System.out.println("Newer version available, updating...");
+				update();
+			} else {
+				System.out.println("No new Updates.");
+				updateCheck();
+			}
+		}
+		else {
 			updateCheck();
 		}
 	}
@@ -571,14 +573,14 @@ public class MiniUI extends JFrame implements UI {
 	public void receive(String received) {
 		this.println(received);
 		Chat.println(received);
-		notification("Received  Message", received);
+		notification("Received  Message", received, received.split(":")[0].contains(" "));
 	}
 
-	private void notification(String title, String message) {
+	private void notification(String title, String message, boolean red) {
 		if (!this.isVisible() && showNotification) {
 			// deprecated: trayIcon.displayMessage(title, message,
 			// TrayIcon.MessageType.INFO);
-			Notification.showNotification(message, title, this);
+			Notification.showNotification(message, title, this, red);
 		}
 	}
 
@@ -623,6 +625,19 @@ public class MiniUI extends JFrame implements UI {
 
 		}).start();
 	}
+	
+	public void settings() {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					Settings frame = new Settings(MiniUI.this);
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
 
 	@Override
 	public void showUI() {
@@ -633,5 +648,20 @@ public class MiniUI extends JFrame implements UI {
 	@Override
 	public boolean isShown() {
 		return this.isVisible();
+	}
+
+	@Override
+	public void setShowNotifications(boolean show) {
+		this.showNotification = show;
+		if (showNotification) {
+			onlineItem.setLabel("Hide Notifications");
+		} else {
+			onlineItem.setLabel("Show Notifications");
+		}
+	}
+
+	@Override
+	public boolean areNotificationsShown() {
+		return this.showNotification;
 	}
 }

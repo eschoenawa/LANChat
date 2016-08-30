@@ -22,11 +22,13 @@ public class Config {
 	private static HashMap<String, String> DEFAULTS = getDefaults();
 
 	private static final String CONFIG_PATH = "./config.json";
-	private static final String CONFIG_FORMAT = "ALPHA";
+	private static final String CONFIG_FORMAT = "BETA";
 	private static final String DEFAULT_NAME = "Anonymous";
 	private static final String DEFAULT_COMMAND_PREFIX = "cmd:";
 	private static final String DEFAULT_RESPONSE_PREFIX = "hello:";
 	private static final String DEFAULT_UPDATE_PREFIX = "update:";
+	private static final String DEFAULT_AUTOUPDATE = "true";
+	private static final String DEFAULT_MINIMIZED = "true";
 
 	private Config(HashMap<String, String> values) {
 		this.values = values;
@@ -59,6 +61,8 @@ public class Config {
 		m.put("command_prefix", DEFAULT_COMMAND_PREFIX);
 		m.put("response_prefix", DEFAULT_RESPONSE_PREFIX);
 		m.put("update_prefix", DEFAULT_UPDATE_PREFIX);
+		m.put("autoupdate", DEFAULT_AUTOUPDATE);
+		m.put("minimized", DEFAULT_MINIMIZED);
 		return m;
 	}
 

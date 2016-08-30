@@ -13,5 +13,9 @@ public interface UI {
 	public void showUI();
 	
 	public boolean isShown();
+	
+	public void setShowNotifications(boolean show);
+	
+	public boolean areNotificationsShown();
 
 }

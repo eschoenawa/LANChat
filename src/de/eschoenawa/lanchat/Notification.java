@@ -29,7 +29,7 @@ public class Notification extends JFrame {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
-		showNotification("Main Method of Notification", "TEST", null);
+		showNotification("Main Method of Notification", "TEST", null, false);
 	}
 
 	/**
@@ -155,7 +155,7 @@ public class Notification extends JFrame {
 		parent.showUI();
 	}
 
-	public static void showNotification(String msg, String title, UI parent) {
+	public static void showNotification(String msg, String title, UI parent, boolean red) {
 		if (n != null) {
 			n.dispose();
 		}
@@ -172,7 +172,7 @@ public class Notification extends JFrame {
 					int y = (int) rect.getMaxY() - frame.getHeight() - 100;
 					frame.setLocation(x, y);
 					frame.toFront();
-					if (msg.startsWith("LANChat Admin"))
+					if (red)
 						frame.getContentPane().setBackground(Color.RED);
 					new Timer().schedule(new java.util.TimerTask() {
 						@Override
