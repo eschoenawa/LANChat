@@ -1,5 +1,7 @@
 # LANChat
 
-This is a very small (ugly) program I wrote for communicating inside LANs using UDP Broadcast messages. Since this is a freetime project of mine, I won't ensure full functionality.
+This is a very small application I threw together for communicating inside LANs using UDP Broadcast messages (I use it as a local chat for communicating with my roommates). Since this is a freetime project of mine, I won't ensure full functionality. Use at your own risk!
 
-Please be aware that the dropbox link for auto-updates for this project broke some time ago and the application will say "No internet connection" all the time. Also be aware that Oracle has plans to remove JavaFX from their JDK so this project may stop working all together. And last but by far not least: This program broadcasts messages through the network. Every participant of a network will be able to read the messages you send with LANChat. This is not a program to hold private conversations with, use any chat client with encryption instead (there are thousands to choose from).
+_**IMPORTANT INFO:** Please note that there are still some issues with the UI and the general way this program works (It only works on Systems supporting the Java SystemTray Class, but I've only tested on Windows 10). If you have a network or system that has to be secure in any form I do not recommend using this program as it can be modified remotely!_
+
+_This program broadcasts messages through the network. Every participant of a network will be able to read the messages you send with LANChat. This is not a program to hold private conversations with, use any chat client with encryption instead (there are hundreds to choose from)._
