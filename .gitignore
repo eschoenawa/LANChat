@@ -1,8 +1,10 @@
 /bin/
 /archive/
+/.idea/
 .classpath
 .project
 .settings
 *.json
 *.jar
 history.txt
+*.iml
