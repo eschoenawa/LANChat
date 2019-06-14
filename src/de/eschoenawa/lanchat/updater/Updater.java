@@ -12,9 +12,9 @@ import javax.swing.JOptionPane;
 public class Updater {
 
 	public static String unset = "[not set]";
-	public static String jarloc = "https://dl.dropboxusercontent.com/u/44998952/LANChat/LANChat.jar";
-	public static String updloc = "https://dl.dropboxusercontent.com/u/44998952/LANChat/Updater.jar";
-	public static String versionloc = "https://dl.dropboxusercontent.com/u/44998952/LANChat/version.txt";
+	public static String jarloc = "https://www.dropbox.com/s/jw0w24l9ko8nnet/LANChat.jar?dl=1";
+	public static String updloc = "https://www.dropbox.com/s/9s7tawqyyjymwj4/Updater.jar?dl=1";
+	public static String versionloc = "https://www.dropbox.com/s/20a5x2ddwcbtztq/version.txt?dl=1";
 	public static String updater = "Updater.jar";
 	public static String jar = "LANChat.jar";
 

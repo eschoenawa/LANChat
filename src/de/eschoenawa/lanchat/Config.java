@@ -17,7 +17,7 @@ import com.google.gson.reflect.TypeToken;
 public class Config {
 	private static Config CONFIG;
 
-	private HashMap<String, String> values;
+	private Map<String, String> values;
 
 	private static HashMap<String, String> DEFAULTS = getDefaults();
 
@@ -30,7 +30,7 @@ public class Config {
 	private static final String DEFAULT_AUTOUPDATE = "true";
 	private static final String DEFAULT_MINIMIZED = "true";
 
-	private Config(HashMap<String, String> values) {
+	private Config(Map<String, String> values) {
 		this.values = values;
 	}
 
@@ -42,7 +42,7 @@ public class Config {
 		return values.get(key);
 	}
 
-	private HashMap<String, String> getValues() {
+	private Map<String, String> getValues() {
 		return values;
 	}
 
