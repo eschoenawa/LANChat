@@ -12,19 +12,18 @@ import javax.swing.plaf.ColorUIResource;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Calendar;
 import java.util.EnumSet;
 import java.util.Scanner;
 
 public class MiniUI extends JFrame implements UI {
 
     private static final long serialVersionUID = 1L;
-    public static String version = "1.1";
+    public static String version = "1.1.1";
     private static String upd = "Newer version available (";
     private JPanel contentPane;
     private TrayIcon trayIcon;
@@ -70,7 +69,13 @@ public class MiniUI extends JFrame implements UI {
                     if (Boolean.parseBoolean(Config.get("minimized")))
                         frame.setVisible(false);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    File file = new File("./crash_" + Calendar.getInstance().getTimeInMillis() + ".log");
+                    try (PrintStream ps = new PrintStream(file)) {
+                        e.printStackTrace(ps);
+                    } catch (FileNotFoundException ex) {
+                        ex.printStackTrace();
+                        System.exit(5555);
+                    }
                 }
             }
         });
