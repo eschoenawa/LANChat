@@ -50,8 +50,7 @@ public class Server implements Runnable {
 			}
 			serverSocket.close();
 		} catch (Exception e) {
-			e.printStackTrace();
-			System.exit(1);
+			Config.fatalCrash(e);
 		}
 	}
 

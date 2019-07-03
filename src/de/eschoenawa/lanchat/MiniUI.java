@@ -16,14 +16,13 @@ import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Calendar;
 import java.util.EnumSet;
 import java.util.Scanner;
 
 public class MiniUI extends JFrame implements UI {
 
     private static final long serialVersionUID = 1L;
-    public static String version = "1.1.1";
+    public static String version = "1.1.2";
     private static String upd = "Newer version available (";
     private JPanel contentPane;
     private TrayIcon trayIcon;
@@ -69,13 +68,7 @@ public class MiniUI extends JFrame implements UI {
                     if (Boolean.parseBoolean(Config.get("minimized")))
                         frame.setVisible(false);
                 } catch (Exception e) {
-                    File file = new File("./crash_" + Calendar.getInstance().getTimeInMillis() + ".log");
-                    try (PrintStream ps = new PrintStream(file)) {
-                        e.printStackTrace(ps);
-                    } catch (FileNotFoundException ex) {
-                        ex.printStackTrace();
-                        System.exit(5555);
-                    }
+                    Config.fatalCrash(e);
                 }
             }
         });

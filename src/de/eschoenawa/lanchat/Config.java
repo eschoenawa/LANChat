@@ -1,12 +1,8 @@
 package de.eschoenawa.lanchat;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.lang.reflect.Type;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,6 +17,8 @@ public class Config {
 
 	private static HashMap<String, String> DEFAULTS = getDefaults();
 
+	private static final String CRASHLOG_PATH_PREFIX = "./crash_";
+	private static final String CRASHLOG_PATH_POSTFIX = ".log";
 	private static final String CONFIG_PATH = "./config.json";
 	private static final String CONFIG_FORMAT = "BETA";
 	private static final String DEFAULT_NAME = "Anonymous";
@@ -154,5 +152,15 @@ public class Config {
 			}
 		}
 		return CONFIG.getValue(key);
+	}
+
+	public static void fatalCrash(Exception e) {
+		File file = new File(CRASHLOG_PATH_PREFIX + Calendar.getInstance().getTimeInMillis() + CRASHLOG_PATH_POSTFIX);
+		try (PrintStream ps = new PrintStream(file)) {
+			e.printStackTrace(ps);
+		} catch (FileNotFoundException ex) {
+			ex.printStackTrace();
+		}
+		System.exit(5555);
 	}
 }
