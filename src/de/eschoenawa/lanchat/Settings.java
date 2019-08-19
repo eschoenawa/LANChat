@@ -9,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
+import java.io.IOException;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -45,7 +46,7 @@ public class Settings extends JFrame {
 					Settings frame = new Settings(null);
 					frame.setVisible(true);
 				} catch (Exception e) {
-					e.printStackTrace();
+					ErrorHandler.reportError(e);
 				}
 			}
 		});
@@ -117,7 +118,11 @@ public class Settings extends JFrame {
 		this.btnOk = new JButton("OK");
 		this.btnOk.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				save();
+				try {
+					save();
+				} catch (IOException e) {
+					ErrorHandler.reportError(e);
+				}
 			}
 		});
 		this.btnOk.setBounds(10, 173, 89, 23);
@@ -133,7 +138,7 @@ public class Settings extends JFrame {
 		this.contentPane.add(this.btnCancel);
 	}
 	
-	public void save() {
+	public void save() throws IOException {
 		if (this.txtName.getText().contains(" ")) {
 			this.lblError.setText("Please don't use spaces in the name!");
 			Border border = BorderFactory.createLineBorder(Color.red);

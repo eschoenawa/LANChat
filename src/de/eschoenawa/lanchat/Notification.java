@@ -184,7 +184,7 @@ public class Notification extends JFrame {
 						}
 					}, 5000);
 				} catch (Exception e) {
-					e.printStackTrace();
+					ErrorHandler.reportError(e, false);
 				}
 			}
 		});

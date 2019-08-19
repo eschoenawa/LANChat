@@ -11,6 +11,7 @@ import java.util.HashMap;
 
 import com.google.gson.Gson;
 
+@Deprecated
 public class DeprecatedConfig {
 
 	public static String CONFIG_PATH = "./config.json";

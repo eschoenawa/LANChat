@@ -13,6 +13,7 @@ import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -22,7 +23,7 @@ import java.util.Scanner;
 public class MiniUI extends JFrame implements UI {
 
     private static final long serialVersionUID = 1L;
-    public static String version = "1.1.2";
+    public static String version = "1.2_dev";
     private static String upd = "Newer version available (";
     private JPanel contentPane;
     private TrayIcon trayIcon;
@@ -68,7 +69,7 @@ public class MiniUI extends JFrame implements UI {
                     if (Boolean.parseBoolean(Config.get("minimized")))
                         frame.setVisible(false);
                 } catch (Exception e) {
-                    Config.fatalCrash(e);
+                    ErrorHandler.fatalCrash(e);
                 }
             }
         });
@@ -177,7 +178,7 @@ public class MiniUI extends JFrame implements UI {
                         System.out.println("Link to " + url + " clicked!");
                         Desktop.getDesktop().browse(new URI(url));
                     } catch (BadLocationException | IOException | URISyntaxException ex) {
-                        ex.printStackTrace();
+                        ErrorHandler.reportError(ex);
                     }
                 }
             }
@@ -362,8 +363,12 @@ public class MiniUI extends JFrame implements UI {
             defaultItem = new MenuItem("Archive");
             defaultItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    Archiver.archiveHistory();
-                    reloadHistory();
+                    try {
+                        Archiver.archiveHistory();
+                        reloadHistory();
+                    } catch (IOException ex) {
+                        ErrorHandler.reportError(ex);
+                    }
                 }
             });
             popup.add(defaultItem);
@@ -391,7 +396,8 @@ public class MiniUI extends JFrame implements UI {
             try {
                 tray.add(trayIcon);
             } catch (AWTException e1) {
-                e1.printStackTrace();
+                System.err.println("Unable to add tray icon!");
+                ErrorHandler.fatalCrash(e1);
             }
         } else {
             System.out.println("system tray not supported");
@@ -457,7 +463,11 @@ public class MiniUI extends JFrame implements UI {
         setIconImage(Toolkit.getDefaultToolkit()
                 .getImage(MiniUI.class.getResource("/javax/swing/plaf/metal/icons/ocean/computer.gif")));
 
-        this.server = new Server(this);
+        try {
+            this.server = new Server(this);
+        } catch (SocketException e) {
+            ErrorHandler.fatalCrash(e);
+        }
         Thread t = new Thread(this.server);
         t.start();
 
@@ -505,7 +515,7 @@ public class MiniUI extends JFrame implements UI {
                     Runtime.getRuntime().exec("java -jar " + Updater.updater + " relaunch");
                     System.exit(0);
                 } catch (IOException e1) {
-                    e1.printStackTrace();
+                    ErrorHandler.fatalCrash(e1);
                 }
             } else {
                 frame = null;
@@ -525,19 +535,11 @@ public class MiniUI extends JFrame implements UI {
     }
 
     private void reloadHistory() {
-        this.textPane.setText("");
-        Chat.load(this);
-    }
-
-    public void setNick() {
-        String newNick = JOptionPane.showInputDialog(this, "Please enter your new Nickname", "Enter nickname",
-                JOptionPane.QUESTION_MESSAGE);
-        if (newNick != null && newNick != "" && newNick.length() > 1 && newNick.length() <= 20
-                && !(newNick.contains(" "))) {
-            Config.set("name", newNick);
-            discover();
-        } else {
-            JOptionPane.showMessageDialog(this, "Nick not set.", "Info", JOptionPane.INFORMATION_MESSAGE);
+        try {
+            this.textPane.setText("");
+            Chat.load(this);
+        } catch (IOException e) {
+            ErrorHandler.reportError(e);
         }
     }
 
@@ -583,7 +585,7 @@ public class MiniUI extends JFrame implements UI {
             }
             doc.insertString(doc.getLength(), "\n", normalStyle);
         } catch (BadLocationException ex) {
-            ex.printStackTrace();
+            ErrorHandler.reportError(ex);
         }
     }
 
@@ -607,7 +609,11 @@ public class MiniUI extends JFrame implements UI {
     @Override
     public void receive(String received) {
         this.println(received);
-        Chat.println(received);
+        try {
+            Chat.println(received);
+        } catch (IOException e) {
+            ErrorHandler.reportError(e);
+        }
         notification("Received  Message", received, received.split(":")[0].contains(" "));
     }
 
@@ -632,7 +638,7 @@ public class MiniUI extends JFrame implements UI {
             s.close();
             return result;
         } catch (IOException e) {
-            e.printStackTrace();
+            ErrorHandler.reportError(e, false);
             return "[unknown]";
         }
     }
@@ -668,7 +674,7 @@ public class MiniUI extends JFrame implements UI {
                     Settings frame = new Settings(MiniUI.this);
                     frame.setVisible(true);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    ErrorHandler.reportError(e);
                 }
             }
         });
