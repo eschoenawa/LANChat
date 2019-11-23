@@ -46,6 +46,7 @@ public class MiniUI extends JFrame implements UI {
     private MenuItem onlineItem;
     private boolean showNotification;
     private JLabel lblUpdate;
+    private long lastVisibilityChangeTimestamp = 0;
 
     /**
      * Launch the application.
@@ -101,7 +102,13 @@ public class MiniUI extends JFrame implements UI {
 
             public void windowLostFocus(WindowEvent arg0) {
                 System.out.println("Focus lost!");
-                MiniUI.this.setVisible(false);
+                if (System.currentTimeMillis() - lastVisibilityChangeTimestamp > Config.VISIBILITY_COOLDOWN) {
+                    lastVisibilityChangeTimestamp = System.currentTimeMillis();
+                    MiniUI.this.setVisible(false);
+                } else {
+                    MiniUI.this.textField.requestFocus();
+                    textPane.setCaretPosition(doc.getLength());
+                }
             }
         });
         setUndecorated(true);
@@ -430,8 +437,11 @@ public class MiniUI extends JFrame implements UI {
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
                     System.out.println("Fired Click!");
-                    setVisible(true);
-                    toFront();
+                    if (System.currentTimeMillis() - lastVisibilityChangeTimestamp > Config.VISIBILITY_COOLDOWN) {
+                        setVisible(true);
+                        toFront();
+                        lastVisibilityChangeTimestamp = System.currentTimeMillis();
+                    }
                 }
             }
         });

@@ -19,6 +19,7 @@ public class Config {
     static final String EXCEPTION_PATH_PREFIX = "./exception_";
     static final String CRASH_PATH_PREFIX = "./crash_";
     static final String CRASHLOG_PATH_POSTFIX = ".log";
+    static final int VISIBILITY_COOLDOWN = 100;
     private static final String CONFIG_PATH = "./config.json";
     private static final String CONFIG_FORMAT = "BETA";
     private static final String DEFAULT_NAME = "Anonymous";
