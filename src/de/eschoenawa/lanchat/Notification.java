@@ -29,7 +29,7 @@ public class Notification extends JFrame {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
-		showNotification("Main Method of Notification", "TEST", null, false);
+		showNotification("Main Method of Notification", "TEST", null, Color.DARK_GRAY);
 	}
 
 	/**
@@ -155,7 +155,7 @@ public class Notification extends JFrame {
 		parent.showUI();
 	}
 
-	public static void showNotification(String msg, String title, UI parent, boolean red) {
+	public static void showNotification(String msg, String title, UI parent, Color color) {
 		if (n != null) {
 			n.dispose();
 		}
@@ -172,8 +172,9 @@ public class Notification extends JFrame {
 					int y = (int) rect.getMaxY() - frame.getHeight() - 100;
 					frame.setLocation(x, y);
 					frame.toFront();
-					if (red)
-						frame.getContentPane().setBackground(Color.RED);
+					if (color != null) {
+						frame.getContentPane().setBackground(color);
+					}
 					new Timer().schedule(new java.util.TimerTask() {
 						@Override
 						public void run() {

@@ -6,20 +6,33 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.Calendar;
 
-import static de.eschoenawa.lanchat.Config.*;
+import static de.eschoenawa.lanchat.config.LanChatConfig.*;
 
 public class ErrorHandler {
+
+    public static void showErrorDialog(String message) {
+        showErrorDialog("Error", message);
+    }
+
+    public static void showErrorDialog(String title, String message) {
+        JOptionPane.showMessageDialog(null, message, title, JOptionPane.ERROR_MESSAGE);
+    }
+
     public static void reportError(Exception e) {
         reportError(e, true);
     }
 
     public static void reportError(Exception e, boolean dialog) {
+        reportError(e, dialog, "An error has occurred:\n");
+    }
+
+    public static void reportError(Exception e, boolean dialog, String errorPrefix) {
         e.printStackTrace();
         if (dialog) {
             Object[] options = {"Yes",
                     "No"};
             int userChoice = JOptionPane.showOptionDialog(null,
-                    "An error has occurred:\n" + e.getClass().getName() + ": " + e.getMessage() + "\n\nShould the stacktrace be written to a logfile?",
+                    errorPrefix + e.getClass().getName() + ": " + e.getMessage() + "\n\nShould the stacktrace be written to a logfile?",
                     e.getClass().getName(),
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.ERROR_MESSAGE,

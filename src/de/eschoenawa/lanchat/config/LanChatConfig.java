@@ -1,34 +1,39 @@
-package de.eschoenawa.lanchat;
+package de.eschoenawa.lanchat.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import de.eschoenawa.lanchat.ErrorHandler;
 
 import java.io.*;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Config {
-    private static Config CONFIG;
+public class LanChatConfig {
+
+    private static LanChatConfig CONFIG;
 
     private Map<String, String> values;
 
     private static HashMap<String, String> DEFAULTS = getDefaults();
 
-    static final String EXCEPTION_PATH_PREFIX = "./exception_";
-    static final String CRASH_PATH_PREFIX = "./crash_";
-    static final String CRASHLOG_PATH_POSTFIX = ".log";
+    public static final String PLUGIN_FOLDER = "./plugins";
+    public static final String EXCEPTION_PATH_PREFIX = "./exception_";
+    public static final String CRASH_PATH_PREFIX = "./crash_";
+    public static final String CRASHLOG_PATH_POSTFIX = ".log";
+    public static final int VISIBILITY_COOLDOWN = 100;
     private static final String CONFIG_PATH = "./config.json";
-    private static final String CONFIG_FORMAT = "BETA";
+    private static final String CONFIG_FORMAT = "GAMMA";
     private static final String DEFAULT_NAME = "Anonymous";
     private static final String DEFAULT_COMMAND_PREFIX = "cmd:";
     private static final String DEFAULT_RESPONSE_PREFIX = "hello:";
     private static final String DEFAULT_UPDATE_PREFIX = "update:";
     private static final String DEFAULT_AUTOUPDATE = "true";
     private static final String DEFAULT_MINIMIZED = "true";
+    private static final String DEFAULT_PLUGINS = "false";
 
-    private Config(Map<String, String> values) {
+    private LanChatConfig(Map<String, String> values) {
         this.values = values;
     }
 
@@ -61,6 +66,7 @@ public class Config {
         m.put("update_prefix", DEFAULT_UPDATE_PREFIX);
         m.put("autoupdate", DEFAULT_AUTOUPDATE);
         m.put("minimized", DEFAULT_MINIMIZED);
+        m.put("plugins", DEFAULT_PLUGINS);
         return m;
     }
 
@@ -68,7 +74,7 @@ public class Config {
         Gson gson = new Gson();
         File f = new File(CONFIG_PATH);
         if (!f.exists()) {
-            CONFIG = new Config(DEFAULTS);
+            CONFIG = new LanChatConfig(DEFAULTS);
             CONFIG.export();
         }
         BufferedReader br = new BufferedReader(new FileReader(CONFIG_PATH));
@@ -76,21 +82,21 @@ public class Config {
         br.close();
         Type type = new TypeToken<Map<String, String>>() {
         }.getType();
-        Config config = new Config(gson.fromJson(json, type));
-        if (config.getValue("config_format") == null) {
+        LanChatConfig lanChatConfig = new LanChatConfig(gson.fromJson(json, type));
+        if (lanChatConfig.getValue("config_format") == null) {
             HashMap<String, String> m = DeprecatedConfig.load().convertToNewFormat();
-            config = new Config(m);
+            lanChatConfig = new LanChatConfig(m);
         }
-        if (config.getValue("name").contains(" ")) {
-            config.setValue("name", config.getValue("name").replace(" ", ""));
+        if (lanChatConfig.getValue("name").contains(" ")) {
+            lanChatConfig.setValue("name", lanChatConfig.getValue("name").replace(" ", ""));
         }
-        if (config.getValue("name").length() > 20) {
-            config.setValue("name", config.getValue("name").substring(0, 18) + "..");
+        if (lanChatConfig.getValue("name").length() > 20) {
+            lanChatConfig.setValue("name", lanChatConfig.getValue("name").substring(0, 18) + "..");
         }
-        if (config.getValue("name").length() < 2) {
-            config.setValue("name", DEFAULTS.get("name"));
+        if (lanChatConfig.getValue("name").length() < 2) {
+            lanChatConfig.setValue("name", DEFAULTS.get("name"));
         }
-        CONFIG = config;
+        CONFIG = lanChatConfig;
         convertToCurrentFormat();
         CONFIG.export();
     }
@@ -104,6 +110,7 @@ public class Config {
                         CONFIG.setValue(k, DEFAULTS.get(k));
                     }
                 }
+                CONFIG.setValue("config_format", DEFAULTS.get("config_format"));
                 CONFIG.export();
                 System.out.println("Converted Config!");
                 return true;

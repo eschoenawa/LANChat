@@ -1,5 +1,7 @@
 package de.eschoenawa.lanchat;
 
+import de.eschoenawa.lanchat.config.LanChatConfig;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.EventQueue;
@@ -91,12 +93,12 @@ public class Settings extends JFrame {
 		
 		this.chckbxStartMinimized = new JCheckBox("Start minimized");
 		this.chckbxStartMinimized.setBounds(10, 67, 120, 23);
-		this.chckbxStartMinimized.setSelected(Boolean.valueOf(Config.get("minimized")));
+		this.chckbxStartMinimized.setSelected(Boolean.valueOf(LanChatConfig.get("minimized")));
 		this.contentPane.add(this.chckbxStartMinimized);
 		
 		this.chckbxUpdate = new JCheckBox("Update automatically");
 		this.chckbxUpdate.setBounds(10, 93, 160, 23);
-		this.chckbxUpdate.setSelected(Boolean.valueOf(Config.get("autoupdate")));
+		this.chckbxUpdate.setSelected(Boolean.valueOf(LanChatConfig.get("autoupdate")));
 		this.contentPane.add(this.chckbxUpdate);
 		
 		this.lblNickname = new JLabel("Nickname:");
@@ -106,7 +108,7 @@ public class Settings extends JFrame {
 		this.txtName = new JTextField();
 		this.txtName.setBounds(95, 120, 175, 20);
 		this.contentPane.add(this.txtName);
-		this.txtName.setText(Config.get("name"));
+		this.txtName.setText(LanChatConfig.get("name"));
 		this.txtName.setColumns(10);
 		
 		this.lblError = new JLabel("");
@@ -157,9 +159,9 @@ public class Settings extends JFrame {
 		else {
 			if (parent != null)
 				parent.setShowNotifications(!this.chckbxHideNotifications.isSelected());
-			Config.set("minimized", new Boolean(this.chckbxStartMinimized.isSelected()).toString());
-			Config.set("autoupdate", new Boolean(this.chckbxUpdate.isSelected()).toString());
-			Config.set("name", this.txtName.getText());
+			LanChatConfig.set("minimized", new Boolean(this.chckbxStartMinimized.isSelected()).toString());
+			LanChatConfig.set("autoupdate", new Boolean(this.chckbxUpdate.isSelected()).toString());
+			LanChatConfig.set("name", this.txtName.getText());
 			this.dispose();
 		}
 	}

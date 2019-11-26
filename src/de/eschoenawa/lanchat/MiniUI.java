@@ -1,5 +1,8 @@
 package de.eschoenawa.lanchat;
 
+import de.eschoenawa.lanchat.config.LanChatConfig;
+import de.eschoenawa.lanchat.plugin.PluginManager;
+import de.eschoenawa.lanchat.plugin.api.Plugin;
 import de.eschoenawa.lanchat.updater.Updater;
 import org.nibor.autolink.LinkExtractor;
 import org.nibor.autolink.LinkSpan;
@@ -12,18 +15,21 @@ import javax.swing.plaf.ColorUIResource;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Scanner;
 
 public class MiniUI extends JFrame implements UI {
 
     private static final long serialVersionUID = 1L;
-    public static String version = "1.2_dev";
+    public static String version = "1.3_dev";
     private static String upd = "Newer version available (";
     private JPanel contentPane;
     private TrayIcon trayIcon;
@@ -32,11 +38,15 @@ public class MiniUI extends JFrame implements UI {
     private JTabbedPane tabbedPane;
     private JPanel panelChat;
     private JPanel panelOnline;
+    private JPanel panelPlugins;
+    private JPanel panelPluginButtons;
+    private final JPanel buttonPanel;
     private JTextField textField;
     private JScrollPane scrollPane;
     private JTextArea textArea;
     private JButton btnRefresh;
     private JScrollPane scrollPane_1;
+    private JScrollPane scrollPane_2;
     private JTextPane textPane;
     private StyledDocument doc;
     private Style redStyle;
@@ -46,6 +56,9 @@ public class MiniUI extends JFrame implements UI {
     private MenuItem onlineItem;
     private boolean showNotification;
     private JLabel lblUpdate;
+    private long lastVisibilityChangeTimestamp = 0;
+    private PluginManager pluginManager;
+    private java.util.List<Plugin.PluginButton> pluginButtons = new ArrayList<>();
 
     /**
      * Launch the application.
@@ -66,7 +79,7 @@ public class MiniUI extends JFrame implements UI {
                     int y = (int) rect.getMaxY() - frame.getHeight();
                     frame.setLocation(x, y);
                     //Previously set to true, but this zigzag is required for proper downscoll.
-                    if (Boolean.parseBoolean(Config.get("minimized")))
+                    if (Boolean.parseBoolean(LanChatConfig.get("minimized")))
                         frame.setVisible(false);
                 } catch (Exception e) {
                     ErrorHandler.fatalCrash(e);
@@ -101,7 +114,13 @@ public class MiniUI extends JFrame implements UI {
 
             public void windowLostFocus(WindowEvent arg0) {
                 System.out.println("Focus lost!");
-                MiniUI.this.setVisible(false);
+                if (System.currentTimeMillis() - lastVisibilityChangeTimestamp > LanChatConfig.VISIBILITY_COOLDOWN) {
+                    lastVisibilityChangeTimestamp = System.currentTimeMillis();
+                    MiniUI.this.setVisible(false);
+                } else {
+                    MiniUI.this.textField.requestFocus();
+                    textPane.setCaretPosition(doc.getLength());
+                }
             }
         });
         setUndecorated(true);
@@ -247,7 +266,6 @@ public class MiniUI extends JFrame implements UI {
             }
         });
         this.panelOnline.setBackground(Color.DARK_GRAY);
-        // panel2.add(new JButton("Button des zweiten Tabs"));
         tabbedPane.addTab("Online", panelOnline);
         this.tabbedPane.setToolTipTextAt(1, "Show who is online");
         this.panelOnline.setLayout(null);
@@ -279,6 +297,33 @@ public class MiniUI extends JFrame implements UI {
         this.scrollPane_1.getVerticalScrollBar().setUI(new DarkScrollbarUI());
         this.scrollPane_1.getHorizontalScrollBar().setUI(new DarkScrollbarUI());
         this.panelOnline.add(this.scrollPane_1);
+
+        panelPlugins = new JPanel();
+        this.panelPlugins.setBackground(Color.DARK_GRAY);
+        if (Boolean.parseBoolean(LanChatConfig.get("plugins"))) {
+            tabbedPane.addTab("Plugins", panelPlugins);
+            this.tabbedPane.setToolTipTextAt(2, "Functions added by plugins");
+            this.tabbedPane.setBackgroundAt(2, Color.DARK_GRAY);
+            this.tabbedPane.setForegroundAt(2, Color.WHITE);
+        }
+        this.panelPlugins.setLayout(null);
+
+        panelPluginButtons = new JPanel();
+        panelPluginButtons.setBounds(0, 0, 425, 230);
+        panelPluginButtons.setBackground(Color.GRAY);
+        panelPluginButtons.setLayout(new BorderLayout());
+        panelPlugins.add(panelPluginButtons);
+
+        buttonPanel = new JPanel(new GridBagLayout());
+        panelPluginButtons.add(buttonPanel, BorderLayout.PAGE_START);
+
+        this.scrollPane_2 = new JScrollPane(panelPluginButtons);
+        this.scrollPane_2.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        this.scrollPane_2.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        this.scrollPane_2.setBounds(0, 0, 425, 231);
+        this.scrollPane_2.getVerticalScrollBar().setUI(new DarkScrollbarUI());
+        this.scrollPane_2.getHorizontalScrollBar().setUI(new DarkScrollbarUI());
+        this.panelPlugins.add(this.scrollPane_2);
 
         this.tabbedPane.setBackgroundAt(0, Color.DARK_GRAY);
         this.tabbedPane.setBackgroundAt(1, Color.DARK_GRAY);
@@ -314,7 +359,7 @@ public class MiniUI extends JFrame implements UI {
                     server.stopResponse();
                     if (SystemTray.isSupported())
                         tray.remove(trayIcon);
-                    server.sendToBroadcast(Config.get("update_prefix"));
+                    server.sendToBroadcast(LanChatConfig.get("update_prefix"), true);
                     System.exit(0);
                 }
             };
@@ -335,6 +380,30 @@ public class MiniUI extends JFrame implements UI {
                 }
             });
             popup.add(onlineItem);
+            MenuItem pluginItem = new MenuItem();
+            pluginItem.setLabel(Boolean.parseBoolean(LanChatConfig.get("plugins")) ? "Disable Plugins" : "Enable Plugins");
+            pluginItem.addActionListener(e -> {
+                try {
+                    boolean newValue = !Boolean.parseBoolean(LanChatConfig.get("plugins"));
+                    LanChatConfig.set("plugins", String.valueOf(newValue));
+                    if (newValue) {
+                        new Thread(() -> pluginManager.loadPlugins()).start();
+                        pluginItem.setLabel("Disable Plugins");
+                        tabbedPane.addTab("Plugins", panelPlugins);
+                        this.tabbedPane.setToolTipTextAt(2, "Functions added by plugins");
+                        this.tabbedPane.setBackgroundAt(2, Color.DARK_GRAY);
+                        this.tabbedPane.setForegroundAt(2, Color.WHITE);
+                    } else {
+                        this.buttonPanel.removeAll();
+                        this.tabbedPane.removeTabAt(2);
+                        new Thread(() -> pluginManager.unloadAllPlugins()).start();
+                        pluginItem.setLabel("Enable Plugins");
+                    }
+                } catch (IOException ex) {
+                    ErrorHandler.reportError(ex, true);
+                }
+            });
+            popup.add(pluginItem);
             defaultItem = new MenuItem("Settings...");
             defaultItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
@@ -383,7 +452,7 @@ public class MiniUI extends JFrame implements UI {
             defaultItem = new MenuItem("About");
             defaultItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    JOptionPane.showMessageDialog(MiniUI.this, "Version: " + version + "\nLANChat by eschoenawa (2016)",
+                    JOptionPane.showMessageDialog(MiniUI.this, "Version: " + version + "\nLANChat by eschoenawa (2016-2019)",
                             "About", JOptionPane.INFORMATION_MESSAGE);
                 }
             });
@@ -430,8 +499,13 @@ public class MiniUI extends JFrame implements UI {
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
                     System.out.println("Fired Click!");
-                    setVisible(true);
-                    toFront();
+                    if (System.currentTimeMillis() - lastVisibilityChangeTimestamp > LanChatConfig.VISIBILITY_COOLDOWN) {
+                        setVisible(true);
+                        toFront();
+                        lastVisibilityChangeTimestamp = System.currentTimeMillis();
+                        trayIcon.setImage(Toolkit.getDefaultToolkit()
+                                .getImage(MiniUI.class.getResource("/javax/swing/plaf/metal/icons/ocean/computer.gif")));
+                    }
                 }
             }
         });
@@ -447,11 +521,11 @@ public class MiniUI extends JFrame implements UI {
                     System.out.println("Shout!");
                     String submsg = JOptionPane.showInputDialog(null, "Enter message:", "Shout",
                             JOptionPane.INFORMATION_MESSAGE);
-                    String msg = Config.get("name") + " shouts" + ": " + submsg;
+                    String msg = LanChatConfig.get("name") + " shouts" + ": " + submsg;
                     if (submsg != null)
-                        server.sendToBroadcast(msg);
+                        sendMessage(msg);
                     else {
-                        server.sendToBroadcast(Config.get("update_prefix"));
+                        server.sendToBroadcast(LanChatConfig.get("update_prefix"), true);
                     }
                 }
             }
@@ -463,8 +537,10 @@ public class MiniUI extends JFrame implements UI {
         setIconImage(Toolkit.getDefaultToolkit()
                 .getImage(MiniUI.class.getResource("/javax/swing/plaf/metal/icons/ocean/computer.gif")));
 
+        pluginManager = new PluginManager(this);
+
         try {
-            this.server = new Server(this);
+            this.server = new Server(this, pluginManager);
         } catch (SocketException e) {
             ErrorHandler.fatalCrash(e);
         }
@@ -480,17 +556,23 @@ public class MiniUI extends JFrame implements UI {
         // updateCheck();
 
         // auto-update
-        if (Boolean.parseBoolean(Config.get("autoupdate"))) {
-            String s = getCurrentVersion();
-            if (!(s.equals(version)) && !(version.endsWith("dev")) && !(version.endsWith("custom")) && !(s.equals("[unknown]"))) {
-                System.out.println("Newer version available, updating...");
-                update();
+        new Thread(() -> {
+            if (Boolean.parseBoolean(LanChatConfig.get("autoupdate"))) {
+                String s = getCurrentVersion();
+                if (!(s.equals(version)) && !(version.endsWith("dev")) && !(version.endsWith("custom")) && !(s.equals("[unknown]"))) {
+                    System.out.println("Newer version available, updating...");
+                    update();
+                } else {
+                    System.out.println("No new Updates.");
+                    updateCheck();
+                }
             } else {
-                System.out.println("No new Updates.");
                 updateCheck();
             }
-        } else {
-            updateCheck();
+        }).start();
+
+        if (Boolean.parseBoolean(LanChatConfig.get("plugins"))) {
+            new Thread(() -> pluginManager.loadPlugins()).start();
         }
     }
 
@@ -510,7 +592,7 @@ public class MiniUI extends JFrame implements UI {
                 server.stopResponse();
                 if (SystemTray.isSupported())
                     tray.remove(trayIcon);
-                server.sendToBroadcast(Config.get("update_prefix"));
+                server.sendToBroadcast(LanChatConfig.get("update_prefix"), true);
                 try {
                     Runtime.getRuntime().exec("java -jar " + Updater.updater + " relaunch");
                     System.exit(0);
@@ -527,11 +609,15 @@ public class MiniUI extends JFrame implements UI {
 
     protected void sendText() {
         if (!this.textField.getText().equals("")) {
-            String msg = Config.get("name") + ": " + this.textField.getText();
-            server.sendToBroadcast(msg);
+            String msg = LanChatConfig.get("name") + ": " + this.textField.getText();
+            sendMessage(msg);
             this.textField.setText("");
             this.textField.requestFocusInWindow();
         }
+    }
+
+    public void sendMessage(String text) {
+        server.sendToBroadcast(text, false);
     }
 
     private void reloadHistory() {
@@ -547,7 +633,7 @@ public class MiniUI extends JFrame implements UI {
     public void println(String... line) {
         for (int i = 0; i < line.length; i++) {
             if (!line[i].contains(":")) {
-                System.out.println("Recieved invalid message: " + line[i]);
+                System.out.println("Received invalid message: " + line[i]);
             } else {
                 String[] split = line[i].split(":");
                 if (split[0].contains(" ")) {
@@ -592,7 +678,7 @@ public class MiniUI extends JFrame implements UI {
     @Override
     public void addValue(String value, String ip) {
         if (!(this.textArea.getText().contains(value))) {
-            if (value.equals(Config.get("name") + " (v" + version + ")"))
+            if (value.equals(LanChatConfig.get("name") + " (v" + version + ")"))
                 this.textArea.append("- " + value + " (You)" + "\n");
             else
                 this.textArea.append("- " + value + "\n");
@@ -608,20 +694,39 @@ public class MiniUI extends JFrame implements UI {
 
     @Override
     public void receive(String received) {
-        this.println(received);
-        try {
-            Chat.println(received);
-        } catch (IOException e) {
-            ErrorHandler.reportError(e);
-        }
-        notification("Received  Message", received, received.split(":")[0].contains(" "));
+        receive(received, true, true);
     }
 
-    private void notification(String title, String message, boolean red) {
+    public void receive(String received, boolean addToHistory, boolean showNotification) {
+        if (!this.isVisible()) {
+            trayIcon.setImage(Toolkit.getDefaultToolkit()
+                    .getImage(MiniUI.class.getResource("/javax/swing/plaf/metal/icons/ocean/warning.png")));
+        }
+        this.println(received);
+        if (addToHistory) {
+            try {
+                Chat.println(received);
+            } catch (IOException e) {
+                ErrorHandler.reportError(e);
+            }
+        }
+        if (showNotification) {
+            String title = "Received Message";
+            Color color = received.split(":")[0].contains(" ") ? Color.RED : Color.DARK_GRAY;
+            StringBuilder hex = new StringBuilder(Integer.toHexString(color.getRGB()));
+            while (hex.length() < 8) {
+                hex.insert(0, "0");
+            }
+            color = pluginManager.getNotificationColor(title, received, hex.toString());
+            notification("Received  Message", received, color);
+        }
+    }
+
+    public void notification(String title, String message, Color color) {
         if (!this.isVisible() && showNotification) {
             // deprecated: trayIcon.displayMessage(title, message,
             // TrayIcon.MessageType.INFO);
-            Notification.showNotification(message, title, this, red);
+            Notification.showNotification(message, title, this, color);
         }
     }
 
@@ -680,10 +785,45 @@ public class MiniUI extends JFrame implements UI {
         });
     }
 
+    public void addPluginButtons(java.util.List<Plugin.PluginButton> pluginButtons) {
+        this.pluginButtons.addAll(pluginButtons);
+
+        for (Plugin.PluginButton pb : pluginButtons) {
+            JButton btn = new JButton(pb.text);
+            btn.setFont(new Font("Tahoma", Font.BOLD, 15));
+            btn.setForeground(Color.WHITE);
+            btn.addActionListener(ae -> pb.action.onButtonPress());
+            btn.setBackground(Color.DARK_GRAY);
+            btn.setMinimumSize(new Dimension(panelPluginButtons.getWidth(), 30));
+
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.gridwidth = GridBagConstraints.REMAINDER;
+            gbc.anchor = GridBagConstraints.FIRST_LINE_START;
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.weightx = 1;
+
+            this.buttonPanel.add(btn, gbc);
+        }
+        this.btnRefresh = new JButton("");
+        this.btnRefresh
+                .setIcon(new ImageIcon(MiniUI.class.getResource("/com/sun/javafx/scene/web/skin/Redo_16x16_JFX.png")));
+        this.btnRefresh.setFont(new Font("Tahoma", Font.BOLD, 15));
+        this.btnRefresh.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent arg0) {
+                discover();
+            }
+        });
+        this.btnRefresh.setBackground(Color.DARK_GRAY);
+        this.btnRefresh.setBounds(0, 228, 425, 34);
+        this.panelOnline.add(this.btnRefresh);
+    }
+
     @Override
     public void showUI() {
         this.setVisible(true);
         this.toFront();
+        trayIcon.setImage(Toolkit.getDefaultToolkit()
+                .getImage(MiniUI.class.getResource("/javax/swing/plaf/metal/icons/ocean/computer.gif")));
     }
 
     @Override
