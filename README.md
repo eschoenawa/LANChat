@@ -1,6 +1,8 @@
 
 # LANChat
 
+![LANChat Screenshot](/lanchat_screenshot.png)
+
 This is a very small application I threw together for communicating inside LANs using UDP Broadcast messages (I use it as a local chat for communicating with my roommates). Since this is a freetime project of mine, I won't ensure full functionality. Use at your own risk!
 
 **IMPORTANT INFO:** Please note that there are still some issues with the UI and the general way this program works (It should work on Systems supporting the Java SystemTray Class, but I've only tested on Windows 10). If you have a network or system that has to be secure in any form I do not recommend using this program as it can be modified remotely and uses no encryption whatsoever!
