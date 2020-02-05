@@ -33,13 +33,7 @@ public class Blacklist {
     }
 
     private void removeExpiredEntries() {
-        Iterator<BlacklistEntry> iterator = entries.iterator();
-        while (iterator.hasNext()) {
-            BlacklistEntry be = iterator.next();
-            if (System.currentTimeMillis() - be.timestamp > TIMEOUT) {
-                entries.remove(be);
-            }
-        }
+        entries.removeIf(be -> System.currentTimeMillis() - be.timestamp > TIMEOUT);
     }
 
     private static class BlacklistEntry {
