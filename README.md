@@ -15,7 +15,7 @@ This is a very small application I threw together for communicating inside LANs 
 LANChat version 1.2 and higher comes with support for plugins. This allows you to process incoming / outgoing messages, send notifications or network messages and create buttons, all with your own custom logic. I've created this feature so I can do minor changes to LANChat and use it for debugging other UDP-Broadcast applications (e.g. an Arduino broadcasting sensor data or receiving certain commands via UDP-Broadcasts) without modifying LANChat itself. I made the PluginSDK public so anyone (with java knowledge) can customize this program to their needs.
 
 ## A note on security
-Plugins are disabled by default for LANChat. Enable them at your own risk and make sure you know a plugin does what it should be doing before installing it. It is very easy to write malicious plugins for LANChat as installed plugins are in no way protected against being replaced and their only unique identifier is th `pluginId`, which every plugin developer can set freely without restrictions.
+Plugins are disabled by default for LANChat. Enable them at your own risk and make sure you know a plugin does what it should be doing before installing it. It is very easy to write malicious plugins for LANChat as installed plugins are in no way protected against being replaced and their only unique identifier is the `pluginId`, which every plugin developer can set freely without restrictions.
 Plugins can be enabled in the right-click context menu of the tray icon.
 
 ## Quick start guide for developing plugins

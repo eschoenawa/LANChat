@@ -3,6 +3,8 @@ package de.eschoenawa.lanchat;
 import de.eschoenawa.lanchat.config.LanChatConfig;
 import de.eschoenawa.lanchat.plugin.PluginManager;
 
+import de.eschoenawa.lanchat.util.Blacklist;
+
 import java.io.IOException;
 import java.net.*;
 import java.util.Enumeration;
@@ -13,6 +15,7 @@ public class Server implements Runnable {
     private PluginManager pluginManager;
     private boolean response;
     private DatagramSocket serverSocket;
+    private Blacklist receiveBlacklist = new Blacklist();
 
     public Server(UI parent, PluginManager pluginManager) throws SocketException {
         super();
@@ -44,8 +47,10 @@ public class Server implements Runnable {
                         parent.discover();
                 } else {
                     received = pluginManager.processReceivedMessage(received);
-                    if (received != null) {
+                    if (received != null && !receiveBlacklist.isInBlacklist(received)) {
                         parent.receive(received);
+                    } else if (received != null) {
+                        System.out.println("Suppressed message: We have just sent this message and already received it once!");
                     }
                 }
             }
@@ -70,6 +75,10 @@ public class Server implements Runnable {
     public void sendToBroadcast(String s, boolean isCommand) {
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            if (!isCommand) {
+                s = pluginManager.processSendMessage(s);
+            }
+            receiveBlacklist.addToList(s);
             while (interfaces.hasMoreElements()) {
                 NetworkInterface networkInterface = interfaces.nextElement();
                 if (networkInterface.isLoopback())
@@ -79,9 +88,6 @@ public class Server implements Runnable {
                     InetAddress broadcast = interfaceAddress.getBroadcast();
                     if (broadcast == null)
                         continue;
-                    if (!isCommand) {
-                        s = pluginManager.processSendMessage(s);
-                    }
                     if (s != null) {
                         send(broadcast, s);
                     }
