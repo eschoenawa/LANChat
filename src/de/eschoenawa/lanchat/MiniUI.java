@@ -29,7 +29,7 @@ import java.util.Scanner;
 public class MiniUI extends JFrame implements UI {
 
     private static final long serialVersionUID = 1L;
-    public static String version = "1.3_dev";
+    public static String version = "1.3.1_dev";
     private static String upd = "Newer version available (";
     private JPanel contentPane;
     private TrayIcon trayIcon;

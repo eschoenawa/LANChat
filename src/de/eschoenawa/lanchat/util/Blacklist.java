@@ -32,7 +32,7 @@ public class Blacklist {
         return false;
     }
 
-    private synchronized void removeExpiredEntries() {
+    private void removeExpiredEntries() {
         Iterator<BlacklistEntry> iterator = entries.iterator();
         while (iterator.hasNext()) {
             BlacklistEntry be = iterator.next();
