@@ -1,2 +1,5 @@
 rootProject.name = 'LANChat'
+include 'server'
+include 'utilities'
+include 'config'
 
