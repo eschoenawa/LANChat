@@ -2,7 +2,7 @@ package de.eschoenawa.lanchat.launcher;
 
 import de.eschoenawa.lanchat.config.Config;
 import de.eschoenawa.lanchat.controller.LanChatController;
-import de.eschoenawa.lanchat.helper.SL;
+import de.eschoenawa.lanchat.helper.ServiceLocator;
 import de.eschoenawa.lanchat.util.ErrorHandler;
 import de.eschoenawa.lanchat.util.Log;
 
@@ -24,10 +24,10 @@ public class Launcher {
     public void launch() {
         Log.i(TAG, "--[ Launching LANChat ]--");
         Log.d(TAG, "Loading configuration...");
-        Config config = SL.getConfig();
+        Config config = ServiceLocator.getConfig();
         Log.d(TAG, "Configuration loaded, launching LANChat.");
         //TODO pass config report to error handler to include configuration in logs
-        LanChatController controller = SL.getLanChatController(config);
+        LanChatController controller = ServiceLocator.getLanChatController(config);
         controller.launch();
     }
 

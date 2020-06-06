@@ -7,21 +7,26 @@ import de.eschoenawa.lanchat.util.Log;
 
 import java.io.*;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ConfigImpl implements Config {
     private static final String TAG = "Config";
 
+    private SettingsDefinition settingsDefinition;
     private Map<String, Setting> settings = new HashMap<>();
     private Map<String, String> currentTransaction;
 
-    public ConfigImpl() {
+    public ConfigImpl(SettingsDefinition settingsDefinition) {
+        this.settingsDefinition = settingsDefinition;
         loadSettings();
+        this.settingsDefinition.validateSettings();
     }
 
     private void loadSettings() {
-        for (Setting setting : SettingsDefinition.getAllSettings()) {
+        for (Setting setting : settingsDefinition.getAllSettings()) {
             this.settings.put(setting.getKey(), setting);
         }
         loadFileSettings();
@@ -29,7 +34,7 @@ public class ConfigImpl implements Config {
 
     private void loadFileSettings() {
         Gson gson = new Gson();
-        String path = getString(SettingsDefinition.Setting.CONFIG_PATH, null);
+        String path = getString(settingsDefinition.getConfigPathKey(), null);
         if (path == null) {
             throw new IllegalStateException("No config path set!");
         }
@@ -70,7 +75,7 @@ public class ConfigImpl implements Config {
     private void saveSettings() {
         Log.d(TAG, "Saving config file...");
         Gson gson = new GsonBuilder().create();
-        String path = getString(SettingsDefinition.Setting.CONFIG_PATH, null);
+        String path = getString(settingsDefinition.getConfigPathKey(), null);
         if (path == null) {
             throw new IllegalStateException("No config path set!");
         }
@@ -106,7 +111,7 @@ public class ConfigImpl implements Config {
 
     @Override
     public synchronized void commitTransaction() {
-        if (currentTransaction != null) {
+        if (isTransactionActive()) {
             for (String key : currentTransaction.keySet()) {
                 Setting setting = settings.get(key);
                 if (setting != null && setting.isModifiable()) {
@@ -119,15 +124,54 @@ public class ConfigImpl implements Config {
                 }
             }
             saveSettings();
+            settingsDefinition.validateSettings();
         } else {
             throw new IllegalStateException("No transaction currently active!");
         }
     }
 
     @Override
+    public synchronized boolean isTransactionActive() {
+        return currentTransaction != null;
+    }
+
+    @Override
+    public synchronized boolean doesTransactionRequireRestart() {
+        if (isTransactionActive()) {
+            for (String key : currentTransaction.keySet()) {
+                Setting setting = settings.get(key);
+                if (setting != null && setting.isModifiable() && setting.isRestartRequired()) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            throw new IllegalStateException("No transaction currently active!");
+        }
+    }
+
+    @Override
+    public List<Setting> getModifiableSettings() {
+        List<Setting> result = new ArrayList<>();
+        for (Setting setting : settings.values()) {
+            if (setting.isModifiable()) {
+                result.add(setting);
+            }
+        }
+        return result;
+    }
+
+    @Override
     public String getString(String key, String def) {
-        Setting found = settings.get(key);
-        return (found == null) ? def : found.getValue();
+        String result = null;
+        if (isTransactionActive()) {
+            result = currentTransaction.get(key);
+        }
+        if (result == null) {
+            Setting found = settings.get(key);
+            result = (found == null) ? def : found.getValue();
+        }
+        return result;
     }
 
     @Override
@@ -162,7 +206,7 @@ public class ConfigImpl implements Config {
 
     @Override
     public synchronized void setString(String key, String value) {
-        if (currentTransaction != null) {
+        if (isTransactionActive()) {
             currentTransaction.put(key, value);
         } else {
             throw new IllegalStateException("No transaction currently active!");

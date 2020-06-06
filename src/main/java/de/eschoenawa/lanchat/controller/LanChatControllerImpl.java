@@ -1,7 +1,7 @@
 package de.eschoenawa.lanchat.controller;
 
 import de.eschoenawa.lanchat.config.Config;
-import de.eschoenawa.lanchat.helper.SL;
+import de.eschoenawa.lanchat.helper.ServiceLocator;
 import de.eschoenawa.lanchat.ui.TrayIcon;
 
 public class LanChatControllerImpl implements LanChatController {
@@ -22,7 +22,7 @@ public class LanChatControllerImpl implements LanChatController {
 
     @Override
     public void launch() {
-        TrayIcon trayIcon = SL.getTrayIcon();
+        TrayIcon trayIcon = ServiceLocator.getTrayIcon();
         trayIcon.setDisplayedIcon(TrayIcon.IconType.BUSY);
         trayIcon.setTooltip("Launching...");
         trayIcon.setCallback(this);

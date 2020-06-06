@@ -1,11 +1,19 @@
 package de.eschoenawa.lanchat.config;
 
+import java.util.List;
+
 public interface Config {
     void beginTransaction();
 
     void abortTransaction();
 
     void commitTransaction();
+
+    boolean isTransactionActive();
+
+    boolean doesTransactionRequireRestart();
+
+    List<Setting> getModifiableSettings();
 
     String getString(String key, String def);
 
@@ -83,7 +91,6 @@ public interface Config {
 
     enum SettingType {
         RAW,
-        BOOLEAN,
-        NAME
+        BOOLEAN
     }
 }
