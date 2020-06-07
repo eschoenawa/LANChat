@@ -22,7 +22,6 @@ public class Texts {
         public static final String SETTINGS_UI_TITLE = "LANChat Settings";
         public static final String SETTINGS_HEADER = "Setting";
         public static final String VALUES_HEADER = "Value";
-        //TODO add Setting ids
     }
 
     public static class General {

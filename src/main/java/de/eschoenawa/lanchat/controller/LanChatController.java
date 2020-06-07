@@ -6,8 +6,4 @@ import de.eschoenawa.lanchat.ui.UserInterface;
 
 public interface LanChatController extends LanChatProtocol.LanChatProtocolCallback, TrayIcon.TrayIconCallback, UserInterface.UserInterfaceCallback {
     void launch();
-
-    void startServer();
-
-    void attachTrayIcon();
 }

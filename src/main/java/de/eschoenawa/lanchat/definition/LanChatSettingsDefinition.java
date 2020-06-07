@@ -38,8 +38,7 @@ public class LanChatSettingsDefinition implements SettingsDefinition {
 
     private void defineInternalSettings() {
         settings.add(new Config.Setting(SettingKeys.VERSION, "v2.0.0_dev", null, Config.SettingType.RAW, false, false));
-        //TODO config path should be old path, is changed for testing
-        settings.add(new Config.Setting(SettingKeys.CONFIG_PATH, "./new_config.json", null, Config.SettingType.RAW, false, false));
+        settings.add(new Config.Setting(SettingKeys.CONFIG_PATH, "./config.json", null, Config.SettingType.RAW, false, false));
         settings.add(new Config.Setting(SettingKeys.PORT, "55545", null, Config.SettingType.RAW, false, true));
         settings.add(new Config.Setting(SettingKeys.LOG_LEVEL, "t", null, Config.SettingType.RAW, false, false));
         settings.add(new Config.Setting(SettingKeys.CMD_PREFIX, "cmd:", null, Config.SettingType.RAW, false, true));

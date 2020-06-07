@@ -47,9 +47,4 @@ public class DarkUserInterface extends JFrame implements UserInterface {
     public void minimize() {
 
     }
-
-    @Override
-    public void setPluginButtons() {
-        //TODO noop until plugins are done
-    }
 }

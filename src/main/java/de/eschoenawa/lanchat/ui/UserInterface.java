@@ -21,8 +21,6 @@ public interface UserInterface {
 
     void minimize();
 
-    void setPluginButtons();     //TODO change once pluginSDK is in V2
-
     interface UserInterfaceCallback {
         void onSendText(String text);
 

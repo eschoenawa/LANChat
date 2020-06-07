@@ -1,12 +1,17 @@
 package de.eschoenawa.lanchat.controller;
 
+import de.eschoenawa.lanchat.communication.LanChatProtocol;
 import de.eschoenawa.lanchat.config.Config;
-import de.eschoenawa.lanchat.helper.ServiceLocator;
+import de.eschoenawa.lanchat.server.Server;
 import de.eschoenawa.lanchat.ui.TrayIcon;
+import de.eschoenawa.lanchat.ui.UserInterface;
 
 public class LanChatControllerImpl implements LanChatController {
 
     private Config config;
+    private TrayIcon trayIcon;
+    private UserInterface userInterface;
+    private Server server;
 
     //TODO do processing of incoming messages (write to file with Chat class and run through plugins(?)), Update UI and handle UI events
     //TODO add TrayIcon
@@ -16,28 +21,27 @@ public class LanChatControllerImpl implements LanChatController {
     //TODO delete update jar
     //TODO hide trayicon as fast as possible when autoupdate on launch
 
-    public LanChatControllerImpl(Config config) {
+    public LanChatControllerImpl(Config config, TrayIcon trayIcon, UserInterface userInterface, Server server) {
         this.config = config;
+        this.trayIcon = trayIcon;
+        this.userInterface = userInterface;
+        this.server = server;
     }
 
     @Override
     public void launch() {
-        TrayIcon trayIcon = ServiceLocator.getTrayIcon();
-        trayIcon.setDisplayedIcon(TrayIcon.IconType.BUSY);
-        trayIcon.setTooltip("Launching...");
-        trayIcon.setCallback(this);
-        trayIcon.addToSystemTray();
+        this.trayIcon.setDisplayedIcon(TrayIcon.IconType.BUSY);
+        this.trayIcon.setTooltip("Launching...");
+        this.trayIcon.setCallback(this);
+        this.trayIcon.addToSystemTray();
 
-    }
+        this.userInterface.setCallback(this);
+        //TODO launch UI
 
-    @Override
-    public void startServer() {
-
-    }
-
-    @Override
-    public void attachTrayIcon() {
-
+        LanChatProtocol protocol = new LanChatProtocol.Builder()
+                .setCallback(this)
+                .build();
+        this.server.setCallback(protocol);
     }
 
     @Override

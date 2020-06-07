@@ -17,10 +17,9 @@ class ServerImpl implements Server {
 
     private boolean started;
 
-    ServerImpl(int port, ServerCallback callback, int timeout, int receiveBlacklistTimeout, boolean receiveSentMessages) throws SocketException {
+    ServerImpl(int port, int timeout, int receiveBlacklistTimeout, boolean receiveSentMessages) throws SocketException {
         this.serverSocket = new DatagramSocket(port);
         this.serverSocket.setSoTimeout(timeout);
-        this.callback = callback;
         this.started = false;
         int maxStrikes = receiveSentMessages ? 0 : -1;
         this.receiveBlacklist = new TimeoutStrikeBlacklist(receiveBlacklistTimeout, maxStrikes);
@@ -109,6 +108,12 @@ class ServerImpl implements Server {
     }
     //endregion
 
+
+    @Override
+    public void setCallback(ServerCallback callback) {
+        this.callback = callback;
+    }
+
     @Override
     public boolean isStarted() {
         return started;
@@ -122,14 +127,12 @@ class ServerImpl implements Server {
 
     private static class Builder {
         private int port;
-        private ServerCallback serverCallback;
         private int timeout = DEFAULT_TIMEOUT;
         private int receiveBlacklistTimeout = DEFAULT_RECEIVE_BLACKLIST_TIMEOUT;
         private boolean receiveSentMessages = DEFAULT_RECEIVE_SENT_MESSAGES;
 
-        public Builder(int port, ServerCallback callback) {
+        public Builder(int port) {
             this.port = port;
-            this.serverCallback = callback;
         }
 
         public Builder setTimeout(int timeout) {
@@ -148,7 +151,7 @@ class ServerImpl implements Server {
         }
 
         public Server build() throws SocketException {
-            return new ServerImpl(port, serverCallback, timeout, receiveBlacklistTimeout, receiveSentMessages);
+            return new ServerImpl(port, timeout, receiveBlacklistTimeout, receiveSentMessages);
         }
     }
 }
