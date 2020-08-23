@@ -120,7 +120,7 @@ public class LanChatProtocol extends ProtocolServerCallback {
 
     public static class Builder {
         private LanChatProtocolCallback callback;
-        private String discoveryCommand = "cmd";
+        private String discoveryCommand = "discover";
         private String discoveryResponseCommand = "hello";
         private String messageCommand = "msg";
         private String shoutCommand = "shout";

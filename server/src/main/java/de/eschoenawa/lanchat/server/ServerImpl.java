@@ -25,6 +25,15 @@ class ServerImpl implements Server {
         this.receiveBlacklist = new TimeoutStrikeBlacklist(receiveBlacklistTimeout, maxStrikes);
     }
 
+    ServerImpl(int port, int timeout, int receiveBlacklistTimeout, boolean receiveSentMessages, ServerCallback callback) throws SocketException {
+        this.serverSocket = new DatagramSocket(port);
+        this.serverSocket.setSoTimeout(timeout);
+        this.started = false;
+        int maxStrikes = receiveSentMessages ? 0 : -1;
+        this.receiveBlacklist = new TimeoutStrikeBlacklist(receiveBlacklistTimeout, maxStrikes);
+        this.callback = callback;
+    }
+
     //region Receiving
     @Override
     public void run() {
@@ -125,33 +134,48 @@ class ServerImpl implements Server {
         callback.onLogStatus(TAG, "Stop has been requested.");
     }
 
-    private static class Builder {
+    static class BuilderImpl implements Server.Builder {
         private int port;
         private int timeout = DEFAULT_TIMEOUT;
         private int receiveBlacklistTimeout = DEFAULT_RECEIVE_BLACKLIST_TIMEOUT;
         private boolean receiveSentMessages = DEFAULT_RECEIVE_SENT_MESSAGES;
+        private ServerCallback callback = null;
 
-        public Builder(int port) {
+        public BuilderImpl(int port) {
             this.port = port;
         }
 
-        public Builder setTimeout(int timeout) {
+        @Override
+        public BuilderImpl setTimeout(int timeout) {
             this.timeout = timeout;
             return this;
         }
 
-        public Builder setDoubleReceivePreventionTimeout(int receiveBlacklistTimeout) {
+        @Override
+        public BuilderImpl setDoubleReceivePreventionTimeout(int receiveBlacklistTimeout) {
             this.receiveBlacklistTimeout = receiveBlacklistTimeout;
             return this;
         }
 
-        public Builder setReceiveSentMessages(boolean receiveSentMessages) {
+        @Override
+        public BuilderImpl setReceiveSentMessages(boolean receiveSentMessages) {
             this.receiveSentMessages = receiveSentMessages;
             return this;
         }
 
+        @Override
+        public BuilderImpl setCallback(ServerCallback callback) {
+            this.callback = callback;
+            return this;
+        }
+
+        @Override
         public Server build() throws SocketException {
-            return new ServerImpl(port, timeout, receiveBlacklistTimeout, receiveSentMessages);
+            if (this.callback == null) {
+                return new ServerImpl(port, timeout, receiveBlacklistTimeout, receiveSentMessages);
+            } else {
+                return new ServerImpl(port, timeout, receiveBlacklistTimeout, receiveSentMessages, callback);
+            }
         }
     }
 }

@@ -205,6 +205,52 @@ public class ConfigImpl implements Config {
     }
 
     @Override
+    public String requireString(String key) {
+        String result = null;
+        if (isTransactionActive()) {
+            result = currentTransaction.get(key);
+        }
+        if (result == null) {
+            Setting found = settings.get(key);
+            result = found.getValue();
+        }
+        if (result == null) {
+            throw new IllegalStateException("Value for key '" + key + "' is required but not stored in config!");
+        }
+        return result;
+    }
+
+    @Override
+    public int requireInt(String key) {
+        return Integer.parseInt(requireString(key));
+    }
+
+    @Override
+    public boolean requireBoolean(String key) {
+        return Boolean.parseBoolean(requireString(key));
+    }
+
+    @Override
+    public double requireDouble(String key) {
+        return Double.parseDouble(requireString(key));
+    }
+
+    @Override
+    public float requireFloat(String key) {
+        return Float.parseFloat(requireString(key));
+    }
+
+    @Override
+    public long requireLong(String key) {
+        return Long.parseLong(requireString(key));
+    }
+
+    @Override
+    public char requireChar(String key) {
+        return requireString(key).charAt(0);
+    }
+
+    @Override
     public synchronized void setString(String key, String value) {
         if (isTransactionActive()) {
             currentTransaction.put(key, value);

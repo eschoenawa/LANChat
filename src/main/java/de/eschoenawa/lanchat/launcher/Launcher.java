@@ -2,6 +2,7 @@ package de.eschoenawa.lanchat.launcher;
 
 import de.eschoenawa.lanchat.config.Config;
 import de.eschoenawa.lanchat.controller.LanChatController;
+import de.eschoenawa.lanchat.definition.LanChatSettingsDefinition;
 import de.eschoenawa.lanchat.helper.ServiceLocator;
 import de.eschoenawa.lanchat.util.ErrorHandler;
 import de.eschoenawa.lanchat.util.Log;
@@ -26,8 +27,9 @@ public class Launcher {
         Log.d(TAG, "Loading configuration...");
         Config config = ServiceLocator.getConfig();
         Log.d(TAG, "Configuration loaded, launching LANChat.");
+        setLogLevel(config);
         //TODO pass config report to error handler to include configuration in logs
-        LanChatController controller = ServiceLocator.getLanChatController(config);
+        LanChatController controller = new LanChatController(config);
         controller.launch();
     }
 
@@ -38,5 +40,10 @@ public class Launcher {
                 Log.w("ArgProcessor", "Disabled exception logging to file!");
             }
         }
+    }
+
+    private void setLogLevel(Config config) {
+        String logLevelString = config.getString(LanChatSettingsDefinition.SettingKeys.LOG_LEVEL, "t");
+        Log.setLogLevel(Log.getLogLevelFromString(logLevelString));
     }
 }

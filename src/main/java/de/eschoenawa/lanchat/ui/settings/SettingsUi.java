@@ -23,14 +23,13 @@ public class SettingsUi extends JFrame {
     private JScrollPane scrollPane;
 
     public static void main(String[] args) {
-        EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                try {
-                    SettingsUi frame = new SettingsUi(ServiceLocator.getConfig());
-                    frame.setVisible(true);
-                } catch (Exception e) {
-                    ErrorHandler.reportError(e);
-                }
+        //TODO remove main from settings ui
+        EventQueue.invokeLater(() -> {
+            try {
+                SettingsUi frame = new SettingsUi(ServiceLocator.getConfig());
+                frame.setVisible(true);
+            } catch (Exception e) {
+                ErrorHandler.reportError(e);
             }
         });
     }

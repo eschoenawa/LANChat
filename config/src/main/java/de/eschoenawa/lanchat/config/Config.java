@@ -29,6 +29,20 @@ public interface Config {
 
     char getChar(String key, char def);
 
+    String requireString(String key);
+
+    int requireInt(String key);
+
+    boolean requireBoolean(String key);
+
+    double requireDouble(String key);
+
+    float requireFloat(String key);
+
+    long requireLong(String key);
+
+    char requireChar(String key);
+
     void setString(String key, String value);
 
     void setInt(String key, int value);
