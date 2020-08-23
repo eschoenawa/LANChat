@@ -15,6 +15,9 @@ public interface Server extends Runnable {
     void stop();
 
     interface Builder {
+
+        Builder setPort(int port);
+
         Builder setTimeout(int timeout);
 
         Builder setDoubleReceivePreventionTimeout(int receiveBlacklistTimeout);

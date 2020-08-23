@@ -135,42 +135,52 @@ class ServerImpl implements Server {
     }
 
     static class BuilderImpl implements Server.Builder {
-        private int port;
+        private int port = -1;
         private int timeout = DEFAULT_TIMEOUT;
         private int receiveBlacklistTimeout = DEFAULT_RECEIVE_BLACKLIST_TIMEOUT;
         private boolean receiveSentMessages = DEFAULT_RECEIVE_SENT_MESSAGES;
         private ServerCallback callback = null;
 
-        public BuilderImpl(int port) {
+        BuilderImpl(){}
+
+        @Override
+        public Builder setPort(int port) {
+            if (port < 1 || port > 65535) {
+                throw new IllegalArgumentException("Port '" + port + "' is not a valid port!");
+            }
             this.port = port;
+            return this;
         }
 
         @Override
-        public BuilderImpl setTimeout(int timeout) {
+        public Builder setTimeout(int timeout) {
             this.timeout = timeout;
             return this;
         }
 
         @Override
-        public BuilderImpl setDoubleReceivePreventionTimeout(int receiveBlacklistTimeout) {
+        public Builder setDoubleReceivePreventionTimeout(int receiveBlacklistTimeout) {
             this.receiveBlacklistTimeout = receiveBlacklistTimeout;
             return this;
         }
 
         @Override
-        public BuilderImpl setReceiveSentMessages(boolean receiveSentMessages) {
+        public Builder setReceiveSentMessages(boolean receiveSentMessages) {
             this.receiveSentMessages = receiveSentMessages;
             return this;
         }
 
         @Override
-        public BuilderImpl setCallback(ServerCallback callback) {
+        public Builder setCallback(ServerCallback callback) {
             this.callback = callback;
             return this;
         }
 
         @Override
         public Server build() throws SocketException {
+            if (this.port == -1) {
+                throw new IllegalStateException("Port wasn't set!");
+            }
             if (this.callback == null) {
                 return new ServerImpl(port, timeout, receiveBlacklistTimeout, receiveSentMessages);
             } else {

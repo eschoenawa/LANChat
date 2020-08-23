@@ -5,8 +5,8 @@ import de.eschoenawa.lanchat.config.Config;
 import de.eschoenawa.lanchat.definition.LanChatSettingsDefinition;
 import de.eschoenawa.lanchat.server.Server;
 import de.eschoenawa.lanchat.server.ServerBuilderFactory;
-import de.eschoenawa.lanchat.ui.TrayIcon;
-import de.eschoenawa.lanchat.ui.TrayIconImpl;
+import de.eschoenawa.lanchat.ui.tray.TrayIcon;
+import de.eschoenawa.lanchat.ui.tray.TrayIconImpl;
 import de.eschoenawa.lanchat.ui.UserInterface;
 import de.eschoenawa.lanchat.util.Log;
 
@@ -28,10 +28,15 @@ public class LanChatController implements TrayIcon.TrayIconCallback, UserInterfa
     //TODO launch update check
     //TODO delete update jar
     //TODO hide trayicon as fast as possible when autoupdate on launch
+    //TODO launch minimized
 
     public LanChatController(Config config) {
+        this(config, ServerBuilderFactory.getServerBuilder(), new TrayIconImpl());
+    }
+
+    public LanChatController(Config config, Server.Builder serverBuilder, TrayIcon trayIcon) {
         this.config = config;
-        this.trayIcon = new TrayIconImpl();
+        this.trayIcon = trayIcon;
         this.userInterface = null; //TODO implement UI
         int port = this.config.requireInt(LanChatSettingsDefinition.SettingKeys.PORT);
         if (port < 1 || port > 65535) {
@@ -48,7 +53,8 @@ public class LanChatController implements TrayIcon.TrayIconCallback, UserInterfa
                 //TODO Plugins
                 .build();
         try {
-            this.server = ServerBuilderFactory.getServerBuilder(port)
+            this.server = serverBuilder
+                    .setPort(port)
                     .setCallback(protocol)
                     .build();
         } catch (SocketException e) {

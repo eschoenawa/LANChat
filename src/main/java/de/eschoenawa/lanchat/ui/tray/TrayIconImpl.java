@@ -1,4 +1,4 @@
-package de.eschoenawa.lanchat.ui;
+package de.eschoenawa.lanchat.ui.tray;
 
 import de.eschoenawa.lanchat.helper.Texts;
 import de.eschoenawa.lanchat.util.Log;

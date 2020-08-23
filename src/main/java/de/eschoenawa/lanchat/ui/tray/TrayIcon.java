@@ -1,4 +1,4 @@
-package de.eschoenawa.lanchat.ui;
+package de.eschoenawa.lanchat.ui.tray;
 
 public interface TrayIcon {
     void setCallback(TrayIconCallback callback);
