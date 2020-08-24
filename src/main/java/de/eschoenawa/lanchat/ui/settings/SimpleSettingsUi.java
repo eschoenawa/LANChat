@@ -11,7 +11,7 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 
-public class SettingsUi extends JFrame {
+public class SimpleSettingsUi extends JFrame {
 
     private static final int WIDTH = 600;
     private static final int HEIGHT = 700;
@@ -26,7 +26,7 @@ public class SettingsUi extends JFrame {
         //TODO remove main from settings ui
         EventQueue.invokeLater(() -> {
             try {
-                SettingsUi frame = new SettingsUi(ServiceLocator.getConfig());
+                SimpleSettingsUi frame = new SimpleSettingsUi(ServiceLocator.getConfig());
                 frame.setVisible(true);
             } catch (Exception e) {
                 ErrorHandler.reportError(e);
@@ -34,7 +34,7 @@ public class SettingsUi extends JFrame {
         });
     }
 
-    public SettingsUi(Config config) {
+    public SimpleSettingsUi(Config config) {
         this.config = config;
         setupWindow();
         setupContentPane();

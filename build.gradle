@@ -16,4 +16,5 @@ dependencies {
     implementation project(':config')
     implementation project(':utilities')
     implementation project(':server')
+    implementation 'org.nibor.autolink:autolink:0.10.0'
 }

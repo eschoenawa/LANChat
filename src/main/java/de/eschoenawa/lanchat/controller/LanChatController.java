@@ -89,6 +89,11 @@ public class LanChatController implements TrayIcon.TrayIconCallback, UserInterfa
     }
 
     @Override
+    public void onUpdateInfoClicked() {
+
+    }
+
+    @Override
     public void onOpenUi() {
 
     }

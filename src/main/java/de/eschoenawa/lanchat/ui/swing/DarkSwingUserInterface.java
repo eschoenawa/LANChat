@@ -1,8 +1,14 @@
 package de.eschoenawa.lanchat.ui.swing;
 
+import de.eschoenawa.lanchat.config.Config;
 import de.eschoenawa.lanchat.ui.UserInterface;
+import de.eschoenawa.lanchat.ui.settings.SimpleSettingsUi;
 import de.eschoenawa.lanchat.util.ErrorHandler;
 import de.eschoenawa.lanchat.util.Log;
+import org.nibor.autolink.LinkExtractor;
+import org.nibor.autolink.LinkSpan;
+import org.nibor.autolink.LinkType;
+import org.nibor.autolink.Span;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -13,6 +19,7 @@ import java.awt.event.*;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.EnumSet;
 import java.util.List;
 
 public class DarkSwingUserInterface extends JFrame implements UserInterface {
@@ -20,16 +27,15 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
     private static final String TAG = "DSUI";
     private static final String URL_ATTRIBUTE = "URL";
 
+    private UserInterfaceCallback callback;
     private Image windowImage = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/computer.gif"));
     private Image refreshImage = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/refresh.png"));
 
+    //region window elements
     private JPanel contentPane;
     private JTabbedPane tabbedPane;
-    private JPanel panelOnline;
-    private JTextArea txtOnline;
-    private JButton btnRefreshOnline;
-    private JScrollPane scrollOnline;
-    private JLabel lblUpdateInfo;
+    private JLabel lblInfo;
+    //endregion
 
     //region chat panel
     private JPanel panelChat;
@@ -37,6 +43,13 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
     private JTextPane txtChat;
     private StyledDocument docChat;
     private JTextField txtSend;
+    //endregion
+
+    //region online panel
+    private JPanel panelOnline;
+    private JTextArea txtOnline;
+    private JButton btnRefreshOnline;
+    private JScrollPane scrollOnline;
     //endregion
 
     //region styles
@@ -61,6 +74,12 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
     }
 
     public DarkSwingUserInterface() {
+        this(null);
+    }
+
+    public DarkSwingUserInterface(UserInterfaceCallback callback) {
+        this.callback = callback;
+
         initWindow();
         initChatTab();
         initOnlineTab();
@@ -153,17 +172,17 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
     }
 
     private void initUpdateInfoLabel() {
-        this.lblUpdateInfo = new JLabel("");
-        this.lblUpdateInfo.addMouseListener(new MouseAdapter() {
+        this.lblInfo = new JLabel("");
+        this.lblInfo.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent arg0) {
-                //TODO start updating
+                onUpdateLabelClicked();
             }
         });
-        this.lblUpdateInfo.setFont(new Font("Tahoma", Font.BOLD, 11));
-        this.lblUpdateInfo.setForeground(Color.GREEN);
-        this.lblUpdateInfo.setBounds(140, 0, 310, 15);
-        this.contentPane.add(this.lblUpdateInfo);
+        this.lblInfo.setFont(new Font("Tahoma", Font.BOLD, 11));
+        this.lblInfo.setForeground(Color.YELLOW);       //TODO always yellow?
+        this.lblInfo.setBounds(140, 0, 310, 15);
+        this.contentPane.add(this.lblInfo);
     }
 
     private void initChatPanel() {
@@ -197,13 +216,12 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
         this.txtChat.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                int position = txtChat.viewToModel(e.getPoint());
+                int position = txtChat.viewToModel(e.getPoint());       //TODO deprecated but newer version may be incompatible
                 Element element = docChat.getCharacterElement(position);
                 if (element.getAttributes().containsAttribute(URL_ATTRIBUTE, true)) {
                     try {
                         String url = docChat.getText(element.getStartOffset(), element.getEndOffset() - element.getStartOffset());
-                        Log.d(TAG, "Link to " + url + " clicked!");
-                        Desktop.getDesktop().browse(new URI(url));
+                        onUrlClicked(url);
                     } catch (BadLocationException | IOException | URISyntaxException ex) {
                         ErrorHandler.reportError(ex);
                     }
@@ -270,12 +288,10 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
         this.txtSend = new JTextField();
         this.txtSend.setFont(new Font("Tahoma", Font.BOLD, 12));
         this.txtSend.setForeground(Color.WHITE);
-        this.txtSend.addActionListener(e -> {
-            //TODO send content of txtSend
-        });
+        this.txtSend.addActionListener(e -> onSendActionTriggered());
         this.txtSend.setBackground(Color.GRAY);
         this.txtSend.setBounds(0, 242, 425, 20);
-        this.txtSend.setColumns(10);    //TODO do I need this?
+        this.txtSend.setColumns(10);    //TODO do I need this? Maybe not, seems like very old code
         this.txtSend.addKeyListener(new KeyListener() {
 
             @Override
@@ -285,9 +301,7 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.isAltDown() && e.isControlDown() && e.isShiftDown()) {
-                    String shoutMessage = JOptionPane.showInputDialog(null, "Enter message:", "Shout",
-                            JOptionPane.INFORMATION_MESSAGE);
-                    //TODO send shout
+                    onShoutTriggered();
                 }
             }
 
@@ -326,12 +340,9 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
 
     private void initOnlineRefreshButton() {
         this.btnRefreshOnline = new JButton("");
-        this.btnRefreshOnline
-                .setIcon(new ImageIcon(refreshImage));  //TODO validate this works
+        this.btnRefreshOnline.setIcon(new ImageIcon(refreshImage));
         this.btnRefreshOnline.setFont(new Font("Tahoma", Font.BOLD, 15));
-        this.btnRefreshOnline.addActionListener(actionEvent -> {
-            //TODO start discovery
-        });
+        this.btnRefreshOnline.addActionListener(actionEvent -> onOnlineRefreshButtonClicked());
         this.btnRefreshOnline.setBackground(Color.DARK_GRAY);
         this.btnRefreshOnline.setBounds(0, 228, 425, 34);
         this.panelOnline.add(this.btnRefreshOnline);
@@ -400,45 +411,122 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
 
     @Override
     public void setCallback(UserInterfaceCallback callback) {
-
+        this.callback = callback;
     }
 
     @Override
     public void setUserList(List<String> users) {
+        clearUserList();
+        for (String user : users) {
+            addDiscoveredUser(user, false);
+        }
     }
 
     @Override
     public void clearUserList() {
-
+        this.txtOnline.setText("");
     }
 
     @Override
-    public void addDiscoveredUser(String user) {
-
+    public void addDiscoveredUser(String user, boolean isCurrent) {
+        if (!this.txtOnline.getText().contains(user)) {
+            if (isCurrent) {
+                this.txtOnline.append("- " + user + " (You)" + "\n");
+            } else {
+                this.txtOnline.append("- " + user + "\n");
+            }
+        }
     }
 
     @Override
     public void clearHistory() {
-
+        this.txtChat.setText("");
     }
 
     @Override
     public void receiveMessage(String sender, String message, boolean shouted) {
-
+        printlnWithStyle(sender, message, shouted ? redStyle : greenStyle);
     }
 
     @Override
     public boolean isOpened() {
-        return false;
+        return this.isVisible();
     }
 
     @Override
     public void open() {
-
+        this.setVisible(true);
+        this.toFront();
     }
 
     @Override
     public void minimize() {
+        this.setVisible(false);
+    }
 
+    @Override
+    public void openSettings(Config config) {
+        //TODO dark settings UI?
+        SimpleSettingsUi settingsUi = new SimpleSettingsUi(config);
+        settingsUi.setVisible(true);
+    }
+
+    @Override
+    public void setInfoText(String infoText) {
+        if (infoText == null) {
+            this.lblInfo.setText("");
+        } else {
+            this.lblInfo.setText(infoText);
+        }
+    }
+
+    private void onUpdateLabelClicked() {
+        callback.onUpdateInfoClicked();
+    }
+
+    private void onUrlClicked(String url) throws URISyntaxException, IOException {
+        Log.d(TAG, "Link to " + url + " clicked!");
+        Desktop.getDesktop().browse(new URI(url));
+    }
+
+    private void onSendActionTriggered() {
+        if (!this.txtSend.getText().equals("")) {
+            callback.onSendText(txtSend.getText());
+            this.txtSend.setText("");
+            this.txtSend.requestFocusInWindow();
+        }
+    }
+
+    private void onShoutTriggered() {
+        String shoutMessage = JOptionPane.showInputDialog(null, "Enter message:", "Shout",
+                JOptionPane.INFORMATION_MESSAGE);
+        if (shoutMessage != null) {
+            callback.onShoutText(shoutMessage);
+        }
+    }
+
+    private void onOnlineRefreshButtonClicked() {
+        clearUserList();
+        callback.onLaunchDiscovery();
+    }
+
+    private void printlnWithStyle(String sender, String message, Style senderStyle) {
+        try {
+            docChat.insertString(docChat.getLength(), sender + ":", senderStyle);
+            LinkExtractor linkExtractor = LinkExtractor.builder()
+                    .linkTypes(EnumSet.of(LinkType.URL, LinkType.WWW))
+                    .build();
+            Iterable<Span> spans = linkExtractor.extractSpans(message);
+            for (Span span : spans) {
+                if (span instanceof LinkSpan) {
+                    docChat.insertString(docChat.getLength(), message.substring(span.getBeginIndex(), span.getEndIndex()), urlStyle);
+                } else {
+                    docChat.insertString(docChat.getLength(), message.substring(span.getBeginIndex(), span.getEndIndex()), normalStyle);
+                }
+            }
+            docChat.insertString(docChat.getLength(), "\n", normalStyle);
+        } catch (BadLocationException ex) {
+            ErrorHandler.reportError(ex);
+        }
     }
 }
