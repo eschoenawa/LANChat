@@ -1,8 +1,6 @@
 package de.eschoenawa.lanchat.ui.swing;
 
-import de.eschoenawa.lanchat.config.Config;
 import de.eschoenawa.lanchat.ui.UserInterface;
-import de.eschoenawa.lanchat.ui.settings.SimpleSettingsUi;
 import de.eschoenawa.lanchat.util.ErrorHandler;
 import de.eschoenawa.lanchat.util.Log;
 import org.nibor.autolink.LinkExtractor;
@@ -20,7 +18,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.EnumSet;
-import java.util.List;
 
 public class DarkSwingUserInterface extends JFrame implements UserInterface {
 
@@ -28,8 +25,8 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
     private static final String URL_ATTRIBUTE = "URL";
 
     private UserInterfaceCallback callback;
-    private Image windowImage = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/computer.gif"));
-    private Image refreshImage = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/refresh.png"));
+    private final Image windowImage = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/computer.gif"));
+    private final Image refreshImage = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/refresh.png"));
 
     //region window elements
     private JPanel contentPane;
@@ -39,7 +36,6 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
 
     //region chat panel
     private JPanel panelChat;
-    private JScrollPane scrollChat;
     private JTextPane txtChat;
     private StyledDocument docChat;
     private JTextField txtSend;
@@ -48,8 +44,6 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
     //region online panel
     private JPanel panelOnline;
     private JTextArea txtOnline;
-    private JButton btnRefreshOnline;
-    private JScrollPane scrollOnline;
     //endregion
 
     //region styles
@@ -59,17 +53,11 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
     private Style urlStyle;
     //endregion
 
-    //TODO remove main
+    // for testing UI on its own
     public static void main(String[] args) {
         EventQueue.invokeLater(() -> {
             DarkSwingUserInterface frame = new DarkSwingUserInterface();
             frame.setVisible(true);
-            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            GraphicsDevice defaultScreen = ge.getDefaultScreenDevice();
-            Rectangle rect = defaultScreen.getDefaultConfiguration().getBounds();
-            int x = (int) rect.getMaxX() - frame.getWidth();
-            int y = (int) rect.getMaxY() - frame.getHeight();
-            frame.setLocation(x, y);
         });
     }
 
@@ -99,9 +87,9 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
 
     private void initChatTab() {
         initChatPanel();
+        initTxtSend();
         initChatField();
         initChatStyles();
-        initTxtSend();
     }
 
     private void initOnlineTab() {
@@ -112,6 +100,7 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
 
     private void afterInit() {
         initTabBackgrounds();
+        setWindowLocation();
     }
 
     private void initUiColors() {
@@ -133,12 +122,12 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
     private void initFocusListener() {
         addWindowFocusListener(new WindowFocusListener() {
             public void windowGainedFocus(WindowEvent arg0) {
-                DarkSwingUserInterface.this.txtSend.requestFocus();     //TODO what if other tab is open?
+                DarkSwingUserInterface.this.txtSend.requestFocus();
                 txtChat.setCaretPosition(docChat.getLength());
             }
 
             public void windowLostFocus(WindowEvent arg0) {
-                //TODO hide UI, maybe visibility cooldown required?
+                setVisible(false);
             }
         });
     }
@@ -153,14 +142,12 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
         setIconImage(windowImage);
     }
 
-    //TODO window listener for window closing required?
-
     private void initContentPane() {
         this.contentPane = new JPanel();
         this.contentPane.setForeground(Color.GREEN);
         this.contentPane.setBackground(Color.BLACK);
         this.contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-        this.contentPane.setLayout(null);   //TODO no layout?
+        this.contentPane.setLayout(null);
         setContentPane(this.contentPane);
     }
 
@@ -176,11 +163,11 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
         this.lblInfo.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent arg0) {
-                onUpdateLabelClicked();
+                onInfoLabelClicked();
             }
         });
         this.lblInfo.setFont(new Font("Tahoma", Font.BOLD, 11));
-        this.lblInfo.setForeground(Color.YELLOW);       //TODO always yellow?
+        this.lblInfo.setForeground(Color.YELLOW);
         this.lblInfo.setBounds(140, 0, 310, 15);
         this.contentPane.add(this.lblInfo);
     }
@@ -190,23 +177,25 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
         this.panelChat.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent arg0) {
-                DarkSwingUserInterface.this.txtSend.requestFocus();     //TODO is this required?
+                if (txtSend != null) {
+                    txtSend.requestFocus();
+                }
             }
         });
         this.panelChat.setForeground(Color.BLACK);
         this.panelChat.setBackground(Color.DARK_GRAY);
-        this.panelChat.setLayout(null);     //TODO no layout?
+        this.panelChat.setLayout(null);
         this.tabbedPane.addTab("Chat", panelChat);
         this.tabbedPane.setToolTipTextAt(0, "Communicate to broadcast address of connected networks.");
     }
 
     private void initChatField() {
-        this.scrollChat = new JScrollPane();    //TODO why here not the view but with online view I have to?
-        this.scrollChat.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-        this.scrollChat.setBounds(0, 0, 425, 231);
-        this.scrollChat.getVerticalScrollBar().setUI(new DarkScrollbarUi());
-        this.scrollChat.getHorizontalScrollBar().setUI(new DarkScrollbarUi());
-        this.panelChat.add(this.scrollChat);
+        JScrollPane scrollChat = new JScrollPane();
+        scrollChat.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollChat.setBounds(0, 0, 425, 231);
+        scrollChat.getVerticalScrollBar().setUI(new DarkScrollbarUi());
+        scrollChat.getHorizontalScrollBar().setUI(new DarkScrollbarUi());
+        this.panelChat.add(scrollChat);
 
         this.txtChat = new JTextPane();
         this.txtChat.setEditable(false);
@@ -216,7 +205,7 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
         this.txtChat.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                int position = txtChat.viewToModel(e.getPoint());       //TODO deprecated but newer version may be incompatible
+                int position = txtChat.viewToModel(e.getPoint());       //TODO deprecated but newer version is incompatible with java < 9
                 Element element = docChat.getCharacterElement(position);
                 if (element.getAttributes().containsAttribute(URL_ATTRIBUTE, true)) {
                     try {
@@ -256,7 +245,7 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
 
             @Override
             public void mouseMoved(MouseEvent e) {
-                int position = txtChat.viewToModel(e.getPoint());       //TODO deprecated but newer version may be incompatible
+                int position = txtChat.viewToModel(e.getPoint());       //TODO deprecated but newer version is incompatible with java < 9
                 Element element = docChat.getCharacterElement(position);
                 if (element.getAttributes().containsAttribute(URL_ATTRIBUTE, true)) {
                     txtChat.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -266,9 +255,9 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
             }
         });
         DefaultCaret caret = (DefaultCaret) this.txtChat.getCaret();
-        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);      //TODO do I need this?
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
         this.docChat = this.txtChat.getStyledDocument();
-        this.scrollChat.setViewportView(this.txtChat);
+        scrollChat.setViewportView(this.txtChat);
     }
 
     private void initChatStyles() {
@@ -291,7 +280,6 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
         this.txtSend.addActionListener(e -> onSendActionTriggered());
         this.txtSend.setBackground(Color.GRAY);
         this.txtSend.setBounds(0, 242, 425, 20);
-        this.txtSend.setColumns(10);    //TODO do I need this? Maybe not, seems like very old code
         this.txtSend.addKeyListener(new KeyListener() {
 
             @Override
@@ -316,7 +304,13 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
     private void initOnlinePanel() {
         this.panelOnline = new JPanel();
         this.panelOnline.setBackground(Color.DARK_GRAY);
-        this.panelOnline.setLayout(null); //TODO no layout?
+        this.panelOnline.setLayout(null);
+        this.panelOnline.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e) {
+                super.componentShown(e);
+            }
+        });
         this.tabbedPane.addTab("Online", panelOnline);
         this.tabbedPane.setToolTipTextAt(1, "Show who is online");
     }
@@ -329,23 +323,23 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
         this.txtOnline.setBounds(0, 0, 425, 230);
         this.panelOnline.add(this.txtOnline);
 
-        this.scrollOnline = new JScrollPane(txtOnline);     //TODO why view (txtOnline) required here but not for same scrollpane for chat?
-        this.scrollOnline.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-        this.scrollOnline.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        this.scrollOnline.setBounds(0, 0, 425, 231);
-        this.scrollOnline.getVerticalScrollBar().setUI(new DarkScrollbarUi());
-        this.scrollOnline.getHorizontalScrollBar().setUI(new DarkScrollbarUi());
-        this.panelOnline.add(this.scrollOnline);
+        JScrollPane scrollOnline = new JScrollPane(txtOnline);
+        scrollOnline.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollOnline.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollOnline.setBounds(0, 0, 425, 231);
+        scrollOnline.getVerticalScrollBar().setUI(new DarkScrollbarUi());
+        scrollOnline.getHorizontalScrollBar().setUI(new DarkScrollbarUi());
+        this.panelOnline.add(scrollOnline);
     }
 
     private void initOnlineRefreshButton() {
-        this.btnRefreshOnline = new JButton("");
-        this.btnRefreshOnline.setIcon(new ImageIcon(refreshImage));
-        this.btnRefreshOnline.setFont(new Font("Tahoma", Font.BOLD, 15));
-        this.btnRefreshOnline.addActionListener(actionEvent -> onOnlineRefreshButtonClicked());
-        this.btnRefreshOnline.setBackground(Color.DARK_GRAY);
-        this.btnRefreshOnline.setBounds(0, 228, 425, 34);
-        this.panelOnline.add(this.btnRefreshOnline);
+        JButton btnRefreshOnline = new JButton("");
+        btnRefreshOnline.setIcon(new ImageIcon(refreshImage));
+        btnRefreshOnline.setFont(new Font("Tahoma", Font.BOLD, 15));
+        btnRefreshOnline.addActionListener(actionEvent -> onOnlineRefreshButtonClicked());
+        btnRefreshOnline.setBackground(Color.DARK_GRAY);
+        btnRefreshOnline.setBounds(0, 228, 425, 34);
+        this.panelOnline.add(btnRefreshOnline);
     }
 
     private void initTabBackgrounds() {
@@ -415,25 +409,17 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
     }
 
     @Override
-    public void setUserList(List<String> users) {
-        clearUserList();
-        for (String user : users) {
-            addDiscoveredUser(user, false);
-        }
-    }
-
-    @Override
     public void clearUserList() {
         this.txtOnline.setText("");
     }
 
     @Override
-    public void addDiscoveredUser(String user, boolean isCurrent) {
+    public void addDiscoveredUser(String user, String version, boolean isCurrent) {
         if (!this.txtOnline.getText().contains(user)) {
             if (isCurrent) {
                 this.txtOnline.append("- " + user + " (You)" + "\n");
             } else {
-                this.txtOnline.append("- " + user + "\n");
+                this.txtOnline.append("- " + user + " (" + version + ")\n");
             }
         }
     }
@@ -465,13 +451,6 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
     }
 
     @Override
-    public void openSettings(Config config) {
-        //TODO dark settings UI?
-        SimpleSettingsUi settingsUi = new SimpleSettingsUi(config);
-        settingsUi.setVisible(true);
-    }
-
-    @Override
     public void setInfoText(String infoText) {
         if (infoText == null) {
             this.lblInfo.setText("");
@@ -480,8 +459,8 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
         }
     }
 
-    private void onUpdateLabelClicked() {
-        callback.onUpdateInfoClicked();
+    private void onInfoLabelClicked() {
+        /*noop for now*/
     }
 
     private void onUrlClicked(String url) throws URISyntaxException, IOException {
@@ -506,13 +485,12 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
     }
 
     private void onOnlineRefreshButtonClicked() {
-        clearUserList();
-        callback.onLaunchDiscovery();
+        freshDiscovery();
     }
 
     private void printlnWithStyle(String sender, String message, Style senderStyle) {
         try {
-            docChat.insertString(docChat.getLength(), sender + ":", senderStyle);
+            docChat.insertString(docChat.getLength(), sender + ": ", senderStyle);
             LinkExtractor linkExtractor = LinkExtractor.builder()
                     .linkTypes(EnumSet.of(LinkType.URL, LinkType.WWW))
                     .build();
@@ -528,5 +506,19 @@ public class DarkSwingUserInterface extends JFrame implements UserInterface {
         } catch (BadLocationException ex) {
             ErrorHandler.reportError(ex);
         }
+    }
+
+    private void setWindowLocation() {
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsDevice defaultScreen = ge.getDefaultScreenDevice();
+        Rectangle rect = defaultScreen.getDefaultConfiguration().getBounds();
+        int x = (int) rect.getMaxX() - getWidth();
+        int y = (int) rect.getMaxY() - getHeight();
+        setLocation(x, y);
+    }
+
+    private void freshDiscovery() {
+        clearUserList();
+        callback.onLaunchDiscovery();
     }
 }

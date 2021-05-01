@@ -4,7 +4,7 @@ public class Texts {
     public static class TrayIcon {
         public static final String TOOLTIP = "LANChat";
         public static class PopupMenu {
-            public static final String UNINITIALIZED_POPUP_ITEM = "-";
+            public static final String UNINITIALIZED_POPUP_ITEM = "ERROR";
             public static final String OPEN = "Open";
             public static final String HIDE_NOTIFICATIONS = "Hide Notifications";
             public static final String SHOW_NOTIFICATIONS = "Show Notifications";

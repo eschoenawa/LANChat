@@ -116,7 +116,7 @@ public class ConfigImpl implements Config {
                 Setting setting = settings.get(key);
                 if (setting != null && setting.isModifiable()) {
                     String newValue = currentTransaction.get(key);
-                    Log.d(TAG, "Changing setting '" + key + "' from '" + setting.getValue() + "' to '" + newValue + "'.");
+                    Log.d(TAG, "Changing setting '" + key + "' to '" + newValue + "'.");
                     setting.setValue(newValue);
                     settings.put(key, setting);
                 } else {
@@ -206,14 +206,7 @@ public class ConfigImpl implements Config {
 
     @Override
     public String requireString(String key) {
-        String result = null;
-        if (isTransactionActive()) {
-            result = currentTransaction.get(key);
-        }
-        if (result == null) {
-            Setting found = settings.get(key);
-            result = found.getValue();
-        }
+        String result = getString(key, null);
         if (result == null) {
             throw new IllegalStateException("Value for key '" + key + "' is required but not stored in config!");
         }
@@ -287,5 +280,11 @@ public class ConfigImpl implements Config {
     @Override
     public synchronized void setChar(String key, char value) {
         setString(key, String.valueOf(value));
+    }
+
+    @Override
+    public String toString() {
+        Gson gson = new GsonBuilder().create();
+        return gson.toJson(generateStringSettingsMap());
     }
 }

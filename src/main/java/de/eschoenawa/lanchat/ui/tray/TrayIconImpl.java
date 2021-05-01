@@ -1,26 +1,20 @@
 package de.eschoenawa.lanchat.ui.tray;
 
 import de.eschoenawa.lanchat.helper.Texts;
-import de.eschoenawa.lanchat.util.Log;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class TrayIconImpl implements TrayIcon {
-
-    private static final String TAG = "TrayIcon";
-
     private TrayIconCallback callback;
-    private java.awt.TrayIcon trayIcon;
-    private MenuItem notificationItem;
-    private MenuItem pluginItem;
+    private final java.awt.TrayIcon trayIcon;
 
-    private Image normalImage = Toolkit.getDefaultToolkit()
+    private final Image normalImage = Toolkit.getDefaultToolkit()
             .getImage(getClass().getResource("/computer.gif"));
-    private Image unreadImage = Toolkit.getDefaultToolkit()
+    private final Image unreadImage = Toolkit.getDefaultToolkit()
             .getImage(getClass().getResource("/warning.png"));
-    private Image busyImage = Toolkit.getDefaultToolkit()
+    private final Image busyImage = Toolkit.getDefaultToolkit()
             .getImage(getClass().getResource("/harddrive.gif"));
 
     public TrayIconImpl() {
@@ -30,37 +24,29 @@ public class TrayIconImpl implements TrayIcon {
         trayIcon.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                //TODO remove the following
-                Log.d(TAG, "Click on tray! isPrimaryButton: " + (e.getButton() == MouseEvent.BUTTON1) + "; clicks: " + e.getClickCount());
-                //TODO do I need e.getClickCount() == 1 here?
                 if (e.getButton() == MouseEvent.BUTTON1 && callback != null) {
-                    callback.onOpenUi();
-                    //TODO I removed the return to the normal image here, so when messages are read manually set icon.
+                    callback.onOpenUi(true);
                 }
             }
         });
+        trayIcon.addActionListener(e -> callback.onOpenUi(false));
     }
 
     private PopupMenu createPopupMenu() {
         PopupMenu popup = new PopupMenu();
         MenuItem currentMenuItem = new MenuItem(Texts.TrayIcon.PopupMenu.OPEN);
         currentMenuItem.addActionListener(e -> {
-            if (callback != null) callback.onOpenUi();
+            if (callback != null) callback.onOpenUi(true);
         });
         popup.add(currentMenuItem);
 
         popup.addSeparator();
 
-        notificationItem = new MenuItem(Texts.TrayIcon.PopupMenu.UNINITIALIZED_POPUP_ITEM);
-        notificationItem.addActionListener(e -> {
-            if (callback != null) callback.onHideShowNotifications();
-        });
-        popup.add(notificationItem);
-
-        pluginItem = new MenuItem(Texts.TrayIcon.PopupMenu.UNINITIALIZED_POPUP_ITEM);
+        MenuItem pluginItem = new MenuItem(Texts.TrayIcon.PopupMenu.ENABLE_PLUGINS);
         pluginItem.addActionListener(e -> {
             if (callback != null) callback.onDisableEnablePlugins();
         });
+        pluginItem.setEnabled(false);
         popup.add(pluginItem);
 
         currentMenuItem = new MenuItem(Texts.TrayIcon.PopupMenu.SETTINGS);
@@ -72,12 +58,6 @@ public class TrayIconImpl implements TrayIcon {
         currentMenuItem = new MenuItem(Texts.TrayIcon.PopupMenu.ARCHIVE);
         currentMenuItem.addActionListener(e -> {
             if (callback != null) callback.onArchive();
-        });
-        popup.add(currentMenuItem);
-
-        currentMenuItem = new MenuItem(Texts.TrayIcon.PopupMenu.UPDATE);
-        currentMenuItem.addActionListener(e -> {
-            if (callback != null) callback.onUpdate();
         });
         popup.add(currentMenuItem);
 
@@ -137,13 +117,9 @@ public class TrayIconImpl implements TrayIcon {
     }
 
     @Override
-    public void onHideNotificationsChanged(boolean notificationsHidden) {
-        notificationItem.setLabel(notificationsHidden ? Texts.TrayIcon.PopupMenu.SHOW_NOTIFICATIONS : Texts.TrayIcon.PopupMenu.HIDE_NOTIFICATIONS);
-    }
-
-    @Override
     public void onPluginsDisabledChanged(boolean pluginsDisabled) {
-        pluginItem.setLabel(pluginsDisabled ? Texts.TrayIcon.PopupMenu.ENABLE_PLUGINS : Texts.TrayIcon.PopupMenu.DISABLE_PLUGINS);
+        // TODO re-enable when plugins are coming
+        // pluginItem.setLabel(pluginsDisabled ? Texts.TrayIcon.PopupMenu.ENABLE_PLUGINS : Texts.TrayIcon.PopupMenu.DISABLE_PLUGINS);
     }
 
     @Override
@@ -153,5 +129,10 @@ public class TrayIconImpl implements TrayIcon {
         } else {
             trayIcon.setToolTip(tooltipText);
         }
+    }
+
+    @Override
+    public void showNotification(String title, String text, boolean loud) {
+        trayIcon.displayMessage(title, text, (loud ? java.awt.TrayIcon.MessageType.WARNING : java.awt.TrayIcon.MessageType.NONE));
     }
 }

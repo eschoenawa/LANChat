@@ -9,7 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class LanChatProtocol extends ProtocolServerCallback {
-    private static String TAG = "LC-COMM";
+    private static final String TAG = "LC-COMM";
+    private static final String SEPARATOR = ":";
 
     private LanChatProtocolCallback callback;
 
@@ -25,7 +26,7 @@ public class LanChatProtocol extends ProtocolServerCallback {
         addCommand(discoveryCommand, new ProtocolAction() {
             @Override
             public void onCommandReceived(InetAddress sender, String input) {
-                    callback.onDiscoveryCommandReceived(input);
+                callback.onDiscoveryCommandReceived(input);
             }
 
             @Override
@@ -85,7 +86,7 @@ public class LanChatProtocol extends ProtocolServerCallback {
 
     @Override
     public String getSeparatorRegex() {
-        return ":";
+        return SEPARATOR;
     }
 
     @Override
@@ -94,11 +95,11 @@ public class LanChatProtocol extends ProtocolServerCallback {
     }
 
     private void processReceivedMessage(String messageWithSender, boolean shouted) {
-        if (messageWithSender == null || !messageWithSender.contains(":")) {
+        if (messageWithSender == null || !messageWithSender.contains(SEPARATOR)) {
             Log.w(TAG, "Received invalid message: " + messageWithSender);
             return;
         }
-        String[] split = messageWithSender.split(":");
+        String[] split = messageWithSender.split(SEPARATOR);
         StringBuilder messageBuilder = new StringBuilder();
         for (int j = 1; j < split.length; j++) {
             messageBuilder.append(split[j]);
@@ -111,9 +112,9 @@ public class LanChatProtocol extends ProtocolServerCallback {
     }
 
     public interface LanChatProtocolCallback {
-        void onDiscoveryCommandReceived(String name);
+        void onDiscoveryCommandReceived(String message);
 
-        void onDiscoveryResponseReceived(String name);
+        void onDiscoveryResponseReceived(String message);
 
         void onMessageReceived(String sender, String message, boolean shouted);
     }

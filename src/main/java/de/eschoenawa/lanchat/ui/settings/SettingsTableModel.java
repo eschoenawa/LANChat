@@ -7,8 +7,8 @@ import javax.swing.table.AbstractTableModel;
 import java.util.List;
 
 public class SettingsTableModel extends AbstractTableModel {
-    private Config config;
-    private List<Config.Setting> modifiableSettings;
+    private final Config config;
+    private final List<Config.Setting> modifiableSettings;
 
     public SettingsTableModel(Config config) {
         this.config = config;
@@ -71,23 +71,24 @@ public class SettingsTableModel extends AbstractTableModel {
             case RAW:
             default:
                 config.setString(currentSetting.getKey(), (String) newValue);
-                currentSetting.setValue((String) newValue);
                 break;
             case BOOLEAN:
                 if (newValue instanceof Boolean) {
                     Boolean newBooleanValue = (Boolean) newValue;
                     config.setBoolean(currentSetting.getKey(), newBooleanValue);
-                    currentSetting.setValue(newBooleanValue.toString());
                 } else {
                     throw new IllegalStateException("Setting type is boolean but new value isn't one!");
                 }
         }
     }
 
-    public void applyChanges() {
+    public boolean applyChanges() {
+        boolean result = false;
         if (config.isTransactionActive()) {
+            result = config.doesTransactionRequireRestart();
             config.commitTransaction();
         }
+        return result;
     }
 
     public void cancelChanges() {

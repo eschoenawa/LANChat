@@ -10,20 +10,24 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class SimpleSettingsUi extends JFrame {
 
     private static final int WIDTH = 600;
     private static final int HEIGHT = 700;
 
-    private Config config;
+    private final Image windowImage = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/computer.gif"));
+
+    private final Config config;
     private SettingsTableModel tableModel;
 
     private JPanel contentPane;
     private JScrollPane scrollPane;
 
     public static void main(String[] args) {
-        //TODO remove main from settings ui
+        // For testing the settings UI on its own
         EventQueue.invokeLater(() -> {
             try {
                 SimpleSettingsUi frame = new SimpleSettingsUi(ServiceLocator.getConfig());
@@ -45,10 +49,17 @@ public class SimpleSettingsUi extends JFrame {
 
     private void setupWindow() {
         setTitle(Texts.Settings.SETTINGS_UI_TITLE);
-        setResizable(false); //TODO maybe allow this?
+        setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
         setBounds(dim.width / 2 - WIDTH / 2, dim.height / 2 - HEIGHT / 2, WIDTH, HEIGHT);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                cancelAndClose();
+            }
+        });
+        setIconImage(windowImage);
     }
 
     private void setupContentPane() {
@@ -141,8 +152,10 @@ public class SimpleSettingsUi extends JFrame {
     }
 
     private void saveAndClose() {
-        //TODO check if restart required and show appropriate dialog
-        this.tableModel.applyChanges();
+        boolean restartRequired = this.tableModel.applyChanges();
+        if (restartRequired) {
+            JOptionPane.showMessageDialog(null, "A restart is required for some of the settings to take effect. Please restart LANChat (automatic restart coming in a future release).", "Restart", JOptionPane.WARNING_MESSAGE);
+        }
         this.dispose();
     }
 

@@ -57,6 +57,8 @@ public interface Config {
 
     void setChar(String key, char value);
 
+    String toString();
+
     class Setting {
         private String key;
         private String value;

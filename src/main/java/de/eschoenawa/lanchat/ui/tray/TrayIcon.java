@@ -9,16 +9,14 @@ public interface TrayIcon {
 
     void setDisplayedIcon(IconType iconType);
 
-    void onHideNotificationsChanged(boolean notificationsHidden);
-
     void onPluginsDisabledChanged(boolean pluginsDisabled);
 
     void setTooltip(String tooltipText);
 
-    interface TrayIconCallback {
-        void onOpenUi();
+    void showNotification(String title, String text, boolean loud);
 
-        void onHideShowNotifications();
+    interface TrayIconCallback {
+        void onOpenUi(boolean toggle);
 
         void onDisableEnablePlugins();
 

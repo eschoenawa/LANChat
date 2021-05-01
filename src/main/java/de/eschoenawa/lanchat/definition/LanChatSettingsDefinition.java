@@ -7,11 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LanChatSettingsDefinition implements SettingsDefinition {
-    private List<Config.Setting> settings = new ArrayList<>();
+    private final List<Config.Setting> settings = new ArrayList<>();
 
     public static class SettingKeys {
         //internal
-        public static final String VERSION = "version";
         public static final String CONFIG_PATH = "config_path";
         public static final String PORT = "port";
         public static final String LOG_LEVEL = "log_level";
@@ -24,6 +23,7 @@ public class LanChatSettingsDefinition implements SettingsDefinition {
         public static final String EXCEPTION_PATH_PREFIX = "exception_path_prefix";
         public static final String CRASH_PATH_PREFIX = "crash_path_prefix";
         public static final String UI_VISIBILITY_COOLDOWN = "ui_visibility_cooldown";
+        public static final String HISTORY_PATH = "history_path";
 
 
         //modifiable
@@ -31,7 +31,10 @@ public class LanChatSettingsDefinition implements SettingsDefinition {
         public static final String MINIMIZED = "minimized";
         public static final String AUTO_UPDATE = "auto_update";
         public static final String PLUGINS_ENABLED = "plugins";
+        public static final String SHOW_NOTIFICATIONS = "notifications";
     }
+
+    // TODO add priority for sorting in settings window
 
     public LanChatSettingsDefinition() {
         defineInternalSettings();
@@ -39,7 +42,6 @@ public class LanChatSettingsDefinition implements SettingsDefinition {
     }
 
     private void defineInternalSettings() {
-        settings.add(new Config.Setting(SettingKeys.VERSION, "v2.0.0_dev", null, Config.SettingType.RAW, false, false));
         settings.add(new Config.Setting(SettingKeys.CONFIG_PATH, "./config.json", null, Config.SettingType.RAW, false, false));
         settings.add(new Config.Setting(SettingKeys.PORT, "55545", null, Config.SettingType.RAW, false, true));
         settings.add(new Config.Setting(SettingKeys.LOG_LEVEL, "t", null, Config.SettingType.RAW, false, false));
@@ -52,13 +54,16 @@ public class LanChatSettingsDefinition implements SettingsDefinition {
         settings.add(new Config.Setting(SettingKeys.EXCEPTION_PATH_PREFIX, "./exception_", null, Config.SettingType.RAW, false, false));
         settings.add(new Config.Setting(SettingKeys.CRASH_PATH_PREFIX, "./exception_", null, Config.SettingType.RAW, false, false));
         settings.add(new Config.Setting(SettingKeys.UI_VISIBILITY_COOLDOWN, "100", null, Config.SettingType.RAW, false, false));
+        settings.add(new Config.Setting(SettingKeys.HISTORY_PATH, "./history.txt", null, Config.SettingType.RAW, false, true));
     }
 
     private void defineModifiableSettings() {
         settings.add(new Config.Setting(SettingKeys.NAME, "Anonymous", "Name", Config.SettingType.RAW, true, false));
         settings.add(new Config.Setting(SettingKeys.MINIMIZED, "true", "Start LANChat minimized", Config.SettingType.BOOLEAN, true, false));
         settings.add(new Config.Setting(SettingKeys.AUTO_UPDATE, "true", "Get automatic updates", Config.SettingType.BOOLEAN, true, false));
-        settings.add(new Config.Setting(SettingKeys.PLUGINS_ENABLED, "false", "Use plugins", Config.SettingType.BOOLEAN, true, true));
+        settings.add(new Config.Setting(SettingKeys.SHOW_NOTIFICATIONS, "true", "Show notifications", Config.SettingType.BOOLEAN, true, false));
+        //TODO make plugins setting modifiable again when adding plugins
+        settings.add(new Config.Setting(SettingKeys.PLUGINS_ENABLED, "false", "Use plugins", Config.SettingType.BOOLEAN, false, true));
     }
 
     @Override
@@ -73,6 +78,6 @@ public class LanChatSettingsDefinition implements SettingsDefinition {
 
     @Override
     public void validateSettings() {
-        //TODO check settings for validity (max name length etc.)
+        //TODO check settings for validity (max name length etc.) and correct false stuff
     }
 }
