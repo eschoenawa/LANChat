@@ -11,6 +11,18 @@ repositories {
     mavenCentral()
 }
 
+jar {
+    manifest {
+        attributes 'Main-Class': 'de.eschoenawa.lanchat.launcher.Launcher'
+    }
+
+    from {
+        configurations.runtimeClasspath.collect {it.isDirectory() ? it : zipTree(it)}
+    }
+
+    archiveName 'LANChat.jar'
+}
+
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     implementation project(':config')
