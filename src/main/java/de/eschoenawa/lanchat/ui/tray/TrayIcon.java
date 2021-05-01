@@ -9,6 +9,8 @@ public interface TrayIcon {
 
     void setDisplayedIcon(IconType iconType);
 
+    IconType getDisplayedIcon();
+
     void onPluginsDisabledChanged(boolean pluginsDisabled);
 
     void setTooltip(String tooltipText);
@@ -24,9 +26,9 @@ public interface TrayIcon {
 
         void onArchive();
 
-        void onUpdate();
-
         void onOpenAbout();
+
+        void onDumpLog();
 
         void onExit();
     }

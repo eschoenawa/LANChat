@@ -8,6 +8,7 @@ import java.awt.event.MouseEvent;
 
 public class TrayIconImpl implements TrayIcon {
     private TrayIconCallback callback;
+    private IconType currentIcon;
     private final java.awt.TrayIcon trayIcon;
 
     private final Image normalImage = Toolkit.getDefaultToolkit()
@@ -18,7 +19,7 @@ public class TrayIconImpl implements TrayIcon {
             .getImage(getClass().getResource("/harddrive.gif"));
 
     public TrayIconImpl() {
-
+        currentIcon = IconType.NORMAL;
         trayIcon = new java.awt.TrayIcon(normalImage, Texts.TrayIcon.TOOLTIP, createPopupMenu());
         trayIcon.setImageAutoSize(true);
         trayIcon.addMouseListener(new MouseAdapter() {
@@ -42,12 +43,12 @@ public class TrayIconImpl implements TrayIcon {
 
         popup.addSeparator();
 
-        MenuItem pluginItem = new MenuItem(Texts.TrayIcon.PopupMenu.ENABLE_PLUGINS);
-        pluginItem.addActionListener(e -> {
+        currentMenuItem = new MenuItem(Texts.TrayIcon.PopupMenu.ENABLE_PLUGINS);
+        currentMenuItem.addActionListener(e -> {
             if (callback != null) callback.onDisableEnablePlugins();
         });
-        pluginItem.setEnabled(false);
-        popup.add(pluginItem);
+        currentMenuItem.setEnabled(false);
+        popup.add(currentMenuItem);
 
         currentMenuItem = new MenuItem(Texts.TrayIcon.PopupMenu.SETTINGS);
         currentMenuItem.addActionListener(e -> {
@@ -58,6 +59,12 @@ public class TrayIconImpl implements TrayIcon {
         currentMenuItem = new MenuItem(Texts.TrayIcon.PopupMenu.ARCHIVE);
         currentMenuItem.addActionListener(e -> {
             if (callback != null) callback.onArchive();
+        });
+        popup.add(currentMenuItem);
+
+        currentMenuItem = new MenuItem(Texts.TrayIcon.PopupMenu.DUMP_LOG);
+        currentMenuItem.addActionListener(e -> {
+            if (callback != null) callback.onDumpLog();
         });
         popup.add(currentMenuItem);
 
@@ -102,6 +109,7 @@ public class TrayIconImpl implements TrayIcon {
 
     @Override
     public void setDisplayedIcon(IconType iconType) {
+        currentIcon = iconType;
         switch (iconType) {
             case NORMAL:
             default:
@@ -114,6 +122,11 @@ public class TrayIconImpl implements TrayIcon {
                 trayIcon.setImage(busyImage);
                 break;
         }
+    }
+
+    @Override
+    public IconType getDisplayedIcon() {
+        return currentIcon;
     }
 
     @Override

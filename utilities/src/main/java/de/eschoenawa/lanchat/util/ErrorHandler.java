@@ -12,11 +12,13 @@ public class ErrorHandler {
     private static final String TAG = "ErrorHandler";
     private static final String DEFAULT_EXCEPTION_PATH_PREFIX = "./exception_";
     private static final String DEFAULT_CRASH_PATH_PREFIX = "./crash_";
+    private static final String DEFAULT_LOG_PATH_PREFIX = "./log_";
     private static final String DEFAULT_PATH_POSTFIX = ".log";
 
     public static boolean allowWriteToFile = true;
     public static String exceptionPathPrefix = DEFAULT_EXCEPTION_PATH_PREFIX;
     public static String crashPathPrefix = DEFAULT_CRASH_PATH_PREFIX;
+    public static String logPathPrefix = DEFAULT_LOG_PATH_PREFIX;
     public static String pathPostfix = DEFAULT_PATH_POSTFIX;
 
     public static void showErrorDialog(String message) {
@@ -70,6 +72,10 @@ public class ErrorHandler {
         System.exit(5555);
     }
 
+    public static void createLogfile() {
+        logException(null, logPathPrefix);
+    }
+
     private static void logException(Exception e, String prefix) {
         if (allowWriteToFile) {
             File file = new File(prefix + Calendar.getInstance().getTimeInMillis() + pathPostfix);
@@ -85,7 +91,11 @@ public class ErrorHandler {
                 System.err.println("Unable to write exception to file!");
             }
         } else {
-            System.err.println("Log of '" + e.toString() + ": " + e.getMessage() + "' not written to file (disabled)!");
+            if (e != null) {
+                System.err.println("Log of '" + e + ": " + e.getMessage() + "' not written to file (disabled)!");
+            } else {
+                System.err.println("Logfile not written to file (disabled)!");
+            }
         }
     }
 }

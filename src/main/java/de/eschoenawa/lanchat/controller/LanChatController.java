@@ -36,6 +36,7 @@ public class LanChatController implements TrayIcon.TrayIconCallback, UserInterfa
 
     private final String updateProviderUrl;
     private final String discoveryCommand;
+    private final String discoveryResponseCommand;
     private final String messageCommand;
     private final String shoutCommand;
 
@@ -55,7 +56,7 @@ public class LanChatController implements TrayIcon.TrayIconCallback, UserInterfa
         }
         this.updateProviderUrl = updateProviderUrl;
         this.discoveryCommand = config.requireString(LanChatSettingsDefinition.SettingKeys.DISCOVERY_PREFIX);
-        String discoveryResponseCommand = config.requireString(LanChatSettingsDefinition.SettingKeys.DISCOVERY_RESPONSE_PREFIX);
+        this.discoveryResponseCommand = config.requireString(LanChatSettingsDefinition.SettingKeys.DISCOVERY_RESPONSE_PREFIX);
         this.messageCommand = config.requireString(LanChatSettingsDefinition.SettingKeys.MESSAGE_PREFIX);
         this.shoutCommand = config.requireString(LanChatSettingsDefinition.SettingKeys.SHOUT_PREFIX);
         this.protocol = new LanChatProtocol.Builder()
@@ -178,15 +179,15 @@ public class LanChatController implements TrayIcon.TrayIconCallback, UserInterfa
     }
 
     @Override
-    public void onUpdate() {
-
-    }
-
-    @Override
     public void onOpenAbout() {
         JOptionPane.showMessageDialog(null,
                 "Version: " + Version.VERSION_STRING + "\nLANChat by Emil Schoenawa (@eschoenawa)\n2016-2021",
                 "About", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    @Override
+    public void onDumpLog() {
+        ErrorHandler.createLogfile();
     }
 
     @Override
@@ -200,7 +201,21 @@ public class LanChatController implements TrayIcon.TrayIconCallback, UserInterfa
     @Override
     public void onDiscoveryCommandReceived(String message) {
         //TODO plugin processing?
-        newDiscoveredUser(message);
+        if (newDiscoveredUser(message)) {
+            String reply = this.discoveryResponseCommand
+                    + this.protocol.getSeparatorRegex()
+                    + config.requireString(LanChatSettingsDefinition.SettingKeys.NAME)
+                    + this.protocol.getSeparatorRegex()
+                    + Version.VERSION_STRING
+                    + this.protocol.getSeparatorRegex()
+                    + Version.VERSION_ID;
+            if (this.updateProviderUrl != null) {
+                reply = reply
+                        + this.protocol.getSeparatorRegex()
+                        + this.updateProviderUrl;
+            }
+            this.server.sendToBroadcast(reply);
+        }
     }
 
     @Override
@@ -223,12 +238,12 @@ public class LanChatController implements TrayIcon.TrayIconCallback, UserInterfa
         }
     }
 
-    private void newDiscoveredUser(String message) {
+    private boolean newDiscoveredUser(String message) {
         String currentName = config.requireString(LanChatSettingsDefinition.SettingKeys.NAME);
         String[] components = message.split(this.protocol.getSeparatorRegex());
         if (components.length < 3) {
             Log.w(TAG, "Invalid discovery message received ('" + message + "')! Ignoring...");
-            return;
+            return false;
         }
         String name = components[0];
         String version = components[1];
@@ -238,24 +253,30 @@ public class LanChatController implements TrayIcon.TrayIconCallback, UserInterfa
             for (int i = 3; i < components.length; i++) {
                 urlBuilder.append(components[i]);
                 if (i + 1 < components.length) {
-                    urlBuilder.append(":");
+                    urlBuilder.append(this.protocol.getSeparatorRegex());
                 }
             }
             updateFlow(urlBuilder.toString());
         }
-        userInterface.addDiscoveredUser(name, version, name.equals(currentName));
+        boolean isCurrentUser = name.equals(currentName);
+        userInterface.addDiscoveredUser(name, version, isCurrentUser);
+        return !isCurrentUser;
     }
 
     private void updateFlow(String updateUrl) {
         Log.d(TAG, "Received new version from another user on the network!");
+        TrayIcon.IconType oldIconType = trayIcon.getDisplayedIcon();
+        trayIcon.setDisplayedIcon(TrayIcon.IconType.BUSY);
         File noUpdate = new File(Launcher.NO_UPDATE_FILE_LOCATION);
         if (noUpdate.exists()) {
             Log.d(TAG, "No-update-policy defined by environment. Ignoring update.");
+            trayIcon.setDisplayedIcon(oldIconType);
             return;
         }
         Log.d(TAG, "Downloading update from '" + updateUrl + "'...");
         if (!Downloader.download(updateUrl, Launcher.NEW_JAR_LOCATION)) {
             ErrorHandler.reportError(new Exception("Unable to download update! Check log for details."), true, "Does LANChat have write access?");
+            trayIcon.setDisplayedIcon(oldIconType);
             return;
         }
         Log.d(TAG, "Download done. Creating file to instruct next LANChat instance to overwrite the old version with the new version...");
@@ -263,10 +284,12 @@ public class LanChatController implements TrayIcon.TrayIconCallback, UserInterfa
         try {
             if (!updateCopyStepFile.createNewFile()) {
                 ErrorHandler.reportError(new Exception("Unable to create overwrite instruction file!"), true, "Does LANChat have write access?");
+                trayIcon.setDisplayedIcon(oldIconType);
                 return;
             }
         } catch (IOException e) {
             ErrorHandler.reportError(e, true, "Unable to create overwrite instruction file!");
+            trayIcon.setDisplayedIcon(oldIconType);
             return;
         }
         Log.d(TAG, "Overwrite instruction file created.");
