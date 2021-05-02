@@ -25,12 +25,13 @@ public class SimpleSettingsUi extends JFrame {
 
     private JPanel contentPane;
     private JScrollPane scrollPane;
+    private SettingsActionCallback callback;
 
     public static void main(String[] args) {
         // For testing the settings UI on its own
         EventQueue.invokeLater(() -> {
             try {
-                SimpleSettingsUi frame = new SimpleSettingsUi(ServiceLocator.getConfig());
+                SimpleSettingsUi frame = new SimpleSettingsUi(ServiceLocator.getConfig(), null);
                 frame.setVisible(true);
             } catch (Exception e) {
                 ErrorHandler.reportError(e);
@@ -38,8 +39,9 @@ public class SimpleSettingsUi extends JFrame {
         });
     }
 
-    public SimpleSettingsUi(Config config) {
+    public SimpleSettingsUi(Config config, SettingsActionCallback callback) {
         this.config = config;
+        this.callback = callback;
         setupWindow();
         setupContentPane();
         setupScrollPane();
@@ -156,11 +158,18 @@ public class SimpleSettingsUi extends JFrame {
         if (restartRequired) {
             JOptionPane.showMessageDialog(null, "A restart is required for some of the settings to take effect. Please restart LANChat (automatic restart coming in a future release).", "Restart", JOptionPane.WARNING_MESSAGE);
         }
+        if (this.callback != null) {
+            this.callback.onSettingsSaved();
+        }
         this.dispose();
     }
 
     private void cancelAndClose() {
         this.tableModel.cancelChanges();
         this.dispose();
+    }
+
+    public interface SettingsActionCallback {
+        void onSettingsSaved();
     }
 }

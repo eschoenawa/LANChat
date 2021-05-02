@@ -17,15 +17,17 @@ import de.eschoenawa.lanchat.util.Blacklist;
 import de.eschoenawa.lanchat.util.Downloader;
 import de.eschoenawa.lanchat.util.ErrorHandler;
 import de.eschoenawa.lanchat.util.Log;
+import mslinks.ShellLink;
 
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.SocketException;
 
-public class LanChatController implements TrayIcon.TrayIconCallback, UserInterface.UserInterfaceCallback, LanChatProtocol.LanChatProtocolCallback {
+public class LanChatController implements TrayIcon.TrayIconCallback, UserInterface.UserInterfaceCallback, LanChatProtocol.LanChatProtocolCallback, SimpleSettingsUi.SettingsActionCallback {
 
     private static final String TAG = "LC Controller";
+    private static final String STARTUP_PATH = "/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup";
 
     private final Config config;
     private final TrayIcon trayIcon;
@@ -98,6 +100,7 @@ public class LanChatController implements TrayIcon.TrayIconCallback, UserInterfa
         Chat.load(this.userInterface::receiveMessage);
 
         // Finalize launch
+        syncAutostartFolderToSetting();
         this.trayIcon.setDisplayedIcon(TrayIcon.IconType.NORMAL);
         this.trayIcon.setTooltip("LANChat");
         if (!config.requireBoolean(LanChatSettingsDefinition.SettingKeys.MINIMIZED)) {
@@ -167,7 +170,7 @@ public class LanChatController implements TrayIcon.TrayIconCallback, UserInterfa
 
     @Override
     public void onOpenSettings() {
-        SimpleSettingsUi frame = new SimpleSettingsUi(this.config);
+        SimpleSettingsUi frame = new SimpleSettingsUi(this.config, this);
         frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         frame.setVisible(true);
     }
@@ -238,6 +241,11 @@ public class LanChatController implements TrayIcon.TrayIconCallback, UserInterfa
         }
     }
 
+    @Override
+    public void onSettingsSaved() {
+        syncAutostartFolderToSetting();
+    }
+
     private boolean newDiscoveredUser(String message) {
         String currentName = config.requireString(LanChatSettingsDefinition.SettingKeys.NAME);
         String[] components = message.split(this.protocol.getSeparatorRegex());
@@ -261,6 +269,27 @@ public class LanChatController implements TrayIcon.TrayIconCallback, UserInterfa
         boolean isCurrentUser = name.equals(currentName);
         userInterface.addDiscoveredUser(name, version, isCurrentUser);
         return !isCurrentUser;
+    }
+
+    private void syncAutostartFolderToSetting() {
+        boolean shouldLaunchOnStartup = config.requireBoolean(LanChatSettingsDefinition.SettingKeys.AUTOSTART);
+        File file = new File(System.getProperty("user.home") + STARTUP_PATH + "/LANChat.lnk");
+        if (shouldLaunchOnStartup) {
+            if (!file.exists()) {
+                try {
+                    File lanChatFile = new File(Launcher.JAR_LOCATION);
+                    ShellLink.createLink(lanChatFile.getAbsolutePath(), file.getAbsolutePath());
+                } catch (IOException e) {
+                    ErrorHandler.reportError(e);
+                }
+            }
+        } else {
+            if (file.exists()) {
+                if (!file.delete()) {
+                    ErrorHandler.reportError(new Exception("Unable to delete shortcut from autostart!"));
+                }
+            }
+        }
     }
 
     private void updateFlow(String updateUrl) {

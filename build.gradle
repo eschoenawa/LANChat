@@ -29,4 +29,5 @@ dependencies {
     implementation project(':utilities')
     implementation project(':server')
     implementation 'org.nibor.autolink:autolink:0.10.0'
+    implementation 'com.github.vatbub:mslinks:1.0.5'
 }

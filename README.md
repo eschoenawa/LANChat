@@ -22,7 +22,7 @@ LANChat supports sending and receiving links and will try to highlight them and 
 
 Right-clicking on the LANChat icon gives you access to a context menu mainly for accessing the settings. There you can set your username and configure LANChat to your liking.
 
-If you want LANChat to launch with Windows booting you can put a link to the LANChat.jar into your autostart folder. Just type `shell:startup` into the run menu (`Win`+`R`) to get to this folder. I use this method and it is quite non-intrusive and works fine. In the future LANChat might support doing this automatically / with a click.
+If you want LANChat to launch with Windows boot you can change the corresponding setting in the settings window.
 
 ## Updating LANChat
 LANChat comes with a neat updating functionality to allow one (or multiple) clients in a network to provide update links to the other clients. This means at least one person in the network has to update manually and provide a download link for the new .jar file, and all the other clients can use that link to automatically update their client.

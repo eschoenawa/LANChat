@@ -32,6 +32,7 @@ public class LanChatSettingsDefinition implements SettingsDefinition {
         public static final String AUTO_UPDATE = "auto_update";
         public static final String PLUGINS_ENABLED = "plugins";
         public static final String SHOW_NOTIFICATIONS = "notifications";
+        public static final String AUTOSTART = "autostart";
     }
 
     // TODO add priority for sorting in settings window
@@ -62,6 +63,7 @@ public class LanChatSettingsDefinition implements SettingsDefinition {
         settings.add(new Config.Setting(SettingKeys.MINIMIZED, "true", "Start LANChat minimized", Config.SettingType.BOOLEAN, true, false));
         settings.add(new Config.Setting(SettingKeys.AUTO_UPDATE, "true", "Get automatic updates", Config.SettingType.BOOLEAN, true, false));
         settings.add(new Config.Setting(SettingKeys.SHOW_NOTIFICATIONS, "true", "Show notifications", Config.SettingType.BOOLEAN, true, false));
+        settings.add(new Config.Setting(SettingKeys.AUTOSTART, "false", "Start LANChat on Windows startup", Config.SettingType.BOOLEAN, true, false));
         //TODO make plugins setting modifiable again when adding plugins
         settings.add(new Config.Setting(SettingKeys.PLUGINS_ENABLED, "false", "Use plugins", Config.SettingType.BOOLEAN, false, true));
     }
