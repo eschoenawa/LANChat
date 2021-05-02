@@ -31,7 +31,7 @@ To provide an update link to clients in your network upload your current LANChat
 
 When you update to the next version make sure to remove or update the `UPDATE` file **before** updating or you will cause other clients to land in an infinite update loop. I plan on fixing this in the future but for now this is sadly something you have to watch out for yourself.
 
-Please note that the auto-update can be a huge security risk because it allows any participant in your network to run any Java code on any machine running LANChat with the auto-update feature enabled! Use only with extreme caution in networks you trust. To be safe you should disable the auto-update feature in the settings. *Use at your own risk! You have been warned!*
+Please note that the auto-update can be a huge security risk because it allows any participant in your network to run any Java code on any machine running LANChat with the auto-update feature enabled! Use only with extreme caution in networks you trust. To be safe you should disable the auto-update feature in the settings if you don't use it. *Use at your own risk! You have been warned!*
 
 ## Plugin development for LANChat
 
