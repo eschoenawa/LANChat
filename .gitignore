@@ -1,6 +1,9 @@
 /bin/
 /archive/
 /.idea/
+/.gradle/
+build/
+out/
 .classpath
 .project
 .settings
@@ -9,3 +12,6 @@
 history.txt
 *.iml
 *.class
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are ignored)
+!gradle-wrapper.jar

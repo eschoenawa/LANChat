@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+}
+
+group 'de.eschoenawa'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'de.eschoenawa.lanchat.launcher.Launcher'
+    }
+
+    from {
+        configurations.runtimeClasspath.collect {it.isDirectory() ? it : zipTree(it)}
+    }
+
+    archiveName 'LANChat.jar'
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    implementation project(':config')
+    implementation project(':utilities')
+    implementation project(':server')
+    implementation 'org.nibor.autolink:autolink:0.10.0'
+    implementation 'com.github.vatbub:mslinks:1.0.5'
+}
