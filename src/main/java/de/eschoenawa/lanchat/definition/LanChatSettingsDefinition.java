@@ -2,6 +2,7 @@ package de.eschoenawa.lanchat.definition;
 
 import de.eschoenawa.lanchat.config.Config;
 import de.eschoenawa.lanchat.config.SettingsDefinition;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,19 +44,19 @@ public class LanChatSettingsDefinition implements SettingsDefinition {
     }
 
     private void defineInternalSettings() {
-        settings.add(new Config.Setting(SettingKeys.CONFIG_PATH, "./config.json", null, Config.SettingType.RAW, false, false));
-        settings.add(new Config.Setting(SettingKeys.PORT, "55545", null, Config.SettingType.RAW, false, true));
-        settings.add(new Config.Setting(SettingKeys.LOG_LEVEL, "t", null, Config.SettingType.RAW, false, false));
-        settings.add(new Config.Setting(SettingKeys.DISCOVERY_PREFIX, "discover", null, Config.SettingType.RAW, false, true));
-        settings.add(new Config.Setting(SettingKeys.UPDATE_PREFIX, "update", null, Config.SettingType.RAW, false, true));
-        settings.add(new Config.Setting(SettingKeys.DISCOVERY_RESPONSE_PREFIX, "hello", null, Config.SettingType.RAW, false, true));
-        settings.add(new Config.Setting(SettingKeys.MESSAGE_PREFIX, "msg", null, Config.SettingType.RAW, false, true));
-        settings.add(new Config.Setting(SettingKeys.SHOUT_PREFIX, "shout", null, Config.SettingType.RAW, false, true));
-        settings.add(new Config.Setting(SettingKeys.PLUGIN_PATH, "./plugins", null, Config.SettingType.RAW, false, true));
-        settings.add(new Config.Setting(SettingKeys.EXCEPTION_PATH_PREFIX, "./exception_", null, Config.SettingType.RAW, false, false));
-        settings.add(new Config.Setting(SettingKeys.CRASH_PATH_PREFIX, "./exception_", null, Config.SettingType.RAW, false, false));
-        settings.add(new Config.Setting(SettingKeys.UI_VISIBILITY_COOLDOWN, "100", null, Config.SettingType.RAW, false, false));
-        settings.add(new Config.Setting(SettingKeys.HISTORY_PATH, "./history.txt", null, Config.SettingType.RAW, false, true));
+        settings.add(new Config.Setting(SettingKeys.CONFIG_PATH, "./config.json", "", Config.SettingType.RAW, false, false));
+        settings.add(new Config.Setting(SettingKeys.PORT, "55545", "", Config.SettingType.RAW, false, true));
+        settings.add(new Config.Setting(SettingKeys.LOG_LEVEL, "t", "", Config.SettingType.RAW, false, false));
+        settings.add(new Config.Setting(SettingKeys.DISCOVERY_PREFIX, "discover", "", Config.SettingType.RAW, false, true));
+        settings.add(new Config.Setting(SettingKeys.UPDATE_PREFIX, "update", "", Config.SettingType.RAW, false, true));
+        settings.add(new Config.Setting(SettingKeys.DISCOVERY_RESPONSE_PREFIX, "hello", "", Config.SettingType.RAW, false, true));
+        settings.add(new Config.Setting(SettingKeys.MESSAGE_PREFIX, "msg", "", Config.SettingType.RAW, false, true));
+        settings.add(new Config.Setting(SettingKeys.SHOUT_PREFIX, "shout", "", Config.SettingType.RAW, false, true));
+        settings.add(new Config.Setting(SettingKeys.PLUGIN_PATH, "./plugins", "", Config.SettingType.RAW, false, true));
+        settings.add(new Config.Setting(SettingKeys.EXCEPTION_PATH_PREFIX, "./exception_", "", Config.SettingType.RAW, false, false));
+        settings.add(new Config.Setting(SettingKeys.CRASH_PATH_PREFIX, "./exception_", "", Config.SettingType.RAW, false, false));
+        settings.add(new Config.Setting(SettingKeys.UI_VISIBILITY_COOLDOWN, "100", "", Config.SettingType.RAW, false, false));
+        settings.add(new Config.Setting(SettingKeys.HISTORY_PATH, "./history.txt", "", Config.SettingType.RAW, false, true));
     }
 
     private void defineModifiableSettings() {
@@ -69,12 +70,12 @@ public class LanChatSettingsDefinition implements SettingsDefinition {
     }
 
     @Override
-    public List<Config.Setting> getAllSettings() {
+    public @NotNull List<Config.Setting> getAllSettings() {
         return settings;
     }
 
     @Override
-    public String getConfigPathKey() {
+    public @NotNull String getConfigPathKey() {
         return SettingKeys.CONFIG_PATH;
     }
 

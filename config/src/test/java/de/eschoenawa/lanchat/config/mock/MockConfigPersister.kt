@@ -20,8 +20,8 @@ class MockConfigPersister() : ConfigPersister {
         this.settings = settings
     }
 
-    override fun save(settings: MutableMap<String, Config.Setting>?) {
-        this.settings = settings!!
+    override fun save(settings: Map<String, Config.Setting>) {
+        this.settings = settings.toMutableMap()
         this.fileCreated = true
     }
 
