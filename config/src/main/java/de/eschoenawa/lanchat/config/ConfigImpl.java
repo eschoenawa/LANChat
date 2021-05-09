@@ -2,11 +2,10 @@ package de.eschoenawa.lanchat.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
+import de.eschoenawa.lanchat.config.persist.ConfigPersister;
+import de.eschoenawa.lanchat.config.persist.SimpleFileConfigPersister;
 import de.eschoenawa.lanchat.util.Log;
 
-import java.io.*;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,77 +14,75 @@ import java.util.Map;
 public class ConfigImpl implements Config {
     private static final String TAG = "Config";
 
-    private SettingsDefinition settingsDefinition;
-    private Map<String, Setting> settings = new HashMap<>();
+    private final ConfigPersister persister;
+    private final SettingsDefinition settingsDefinition;
+    private final Map<String, Setting> settings = new HashMap<>();
     private Map<String, String> currentTransaction;
 
     public ConfigImpl(SettingsDefinition settingsDefinition) {
         this.settingsDefinition = settingsDefinition;
-        loadSettings();
+        loadSettingsFromDefinition();
+        this.persister = new SimpleFileConfigPersister(getString(settingsDefinition.getConfigPathKey(), null));
+        loadSettingsFromFile();
         this.settingsDefinition.validateSettings();
     }
 
-    private void loadSettings() {
+    public ConfigImpl(SettingsDefinition settingsDefinition, ConfigPersister persister) {
+        this.settingsDefinition = settingsDefinition;
+        loadSettingsFromDefinition();
+        this.persister = persister;
+        loadSettingsFromFile();
+        this.settingsDefinition.validateSettings();
+    }
+
+    private void loadSettingsFromDefinition() {
         for (Setting setting : settingsDefinition.getAllSettings()) {
             this.settings.put(setting.getKey(), setting);
         }
-        loadFileSettings();
     }
 
-    private void loadFileSettings() {
-        Gson gson = new Gson();
-        String path = getString(settingsDefinition.getConfigPathKey(), null);
-        if (path == null) {
-            throw new IllegalStateException("No config path set!");
-        }
-        File f = new File(path);
-        if (!f.exists()) {
-            Log.d(TAG, "Config file '" + f.getAbsolutePath() + "' doesn't exist yet. Creating new one now...");
-            saveSettings();
-            Log.d(TAG, "Config file created!");
-            return;
-        }
-        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
-            String json = br.readLine();
-            br.close();
-            Type type = new TypeToken<Map<String, String>>() {
-            }.getType();
-            Map<String, String> settingsFromFile = gson.fromJson(json, type);
-            boolean overwriteRequired = false;
-            for (String key : settingsFromFile.keySet()) {
+    private void loadSettingsFromFile() {
+        this.persister.load(new ConfigPersister.ConfigPersisterLoadCallback() {
+            private boolean overwriteRequired = false;
+            @Override
+            public void onSettingLoaded(String key, String value) {
                 Setting currentSetting = settings.get(key);
                 if (currentSetting == null || !currentSetting.isModifiable()) {
                     Log.w(TAG, "Setting '" + key + "' is either not defined or not modifiable and therefore won't be loaded from file.");
                     overwriteRequired = true;
-                    continue;
+                } else {
+                    currentSetting.setValue(value);
+                    settings.put(key, currentSetting);
                 }
-                currentSetting.setValue(settingsFromFile.get(key));
-                settings.put(key, currentSetting);
             }
-            if (overwriteRequired) {
-                Log.w(TAG, "Config file contains invalid or deprecated settings. Re-creating config file...");
+
+            @Override
+            public void onPersistentSettingsNotYetCreated() {
+                Log.d(TAG, "Config file doesn't exist yet. Creating new one now...");
                 saveSettings();
-                Log.d(TAG, "Config file re-created.");
+                Log.d(TAG, "Config file created!");
             }
-        } catch (IOException e) {
-            Log.e(TAG, "Unable to read from config file! Using defaults.", e);
-        }
+
+            @Override
+            public void onLoadFailed(String reason) {
+                Log.e(TAG, "Unable to read from config file (" + reason + ")! Using defaults.");
+            }
+
+            @Override
+            public void onLoadDone() {
+                if (overwriteRequired) {
+                    Log.w(TAG, "Config file contains invalid or deprecated settings. Re-creating config file...");
+                    saveSettings();
+                    Log.d(TAG, "Config file re-created.");
+                }
+            }
+        });
     }
 
     private void saveSettings() {
         Log.d(TAG, "Saving config file...");
-        Gson gson = new GsonBuilder().create();
-        String path = getString(settingsDefinition.getConfigPathKey(), null);
-        if (path == null) {
-            throw new IllegalStateException("No config path set!");
-        }
-        try (PrintWriter writer = new PrintWriter(path)) {
-            String json = gson.toJson(generateStringSettingsMap());
-            writer.print(json);
-            Log.d(TAG, "Config file saved!");
-        } catch (FileNotFoundException e) {
-            throw new IllegalStateException("Invalid config path: '" + path + "'!", e);
-        }
+        this.persister.save(generateModifiableSettingsMap());
+        Log.d(TAG, "Config file saved!");
     }
 
     private Map<String, String> generateStringSettingsMap() {
@@ -123,6 +120,7 @@ public class ConfigImpl implements Config {
                     Log.w(TAG, "Ignoring changes to setting '" + key + "' (value set to '" + currentTransaction.get(key) + "')! Not registered: " + (setting == null));
                 }
             }
+            currentTransaction = null;
             saveSettings();
             settingsDefinition.validateSettings();
         } else {
@@ -286,5 +284,16 @@ public class ConfigImpl implements Config {
     public String toString() {
         Gson gson = new GsonBuilder().create();
         return gson.toJson(generateStringSettingsMap());
+    }
+
+    private Map<String, Setting> generateModifiableSettingsMap() {
+        HashMap<String, Setting> result = new HashMap<>();
+        for (String key : settings.keySet()) {
+            Setting setting = settings.get(key);
+            if (setting.isModifiable()) {
+                result.put(key, setting);
+            }
+        }
+        return result;
     }
 }
